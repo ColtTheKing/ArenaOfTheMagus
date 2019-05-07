@@ -1,18 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Entities;
 
-public class SpellSystem : MonoBehaviour
+public class SpellSystem : ComponentSystem
 {
-    // Start is called before the first frame update
-    void Start()
+    protected override void OnUpdate()
     {
-        
-    }
+        Entities.ForEach((ref SpellComponent spell) =>
+        {
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        });
     }
 }

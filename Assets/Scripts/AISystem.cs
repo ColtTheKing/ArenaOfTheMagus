@@ -1,23 +1,18 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Entities;
+using Unity.Transforms;
 
-public class AISystem : MonoBehaviour
+public class AISystem : ComponentSystem
 {
-    struct AIComponents
-    {
-        public AIComponent ai;
-        public Transform transform;
-    };
-
-    void Update()
+    protected override void OnUpdate()
     {
         float dTime = Time.deltaTime;
 
-        /*foreach(var entity in GetEntities<AIComponents>())
+        Entities.ForEach((ref Translation translation, ref AIComponent ai) =>
         {
-            //do things
-        }*/
-        //find some way to do this without ecs package
+            
+        });
     }
 }
