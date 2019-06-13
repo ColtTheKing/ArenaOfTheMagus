@@ -8,6 +8,7 @@ public class Player : MonoBehaviour
     //Action Types
     public SteamVR_Action_Single grabAction;
     public SteamVR_Action_Vector2 moveAction;
+    public SteamVR_Action_Boolean recordAction;
 
     public PlayerHand leftHand, rightHand;
     public GameObject playerHead;
@@ -21,7 +22,9 @@ public class Player : MonoBehaviour
 
     public int samplesPerGesture;
 
-    public bool showSamples;
+    public bool showSamples, clearJSON;
+
+    public SpellHandler.SpellType recordedType;
 
     private GestureManager gestureManager;
     private SpellHandler spellHandler;
@@ -35,7 +38,7 @@ public class Player : MonoBehaviour
     {
         leftHand = GetComponentInChildren<PlayerHand>();
 
-        gestureManager = new GestureManager(sampleTime, accuracyPerSample, samplesPerGesture);
+        gestureManager = new GestureManager(sampleTime, accuracyPerSample, samplesPerGesture, clearJSON);
 
         spellHandler = new SpellHandler(spellElement);
     }
@@ -55,7 +58,7 @@ public class Player : MonoBehaviour
             if (leftHand.GetGrabbing())
             {
                 leftHand.ToggleGrabbing();
-                gestureManager.EndGesture(this);
+                spellHandler.CastSpell(gestureManager.EndGesture(this));
             }
         }
 
@@ -72,11 +75,14 @@ public class Player : MonoBehaviour
             if (rightHand.GetGrabbing())
             {
                 rightHand.ToggleGrabbing();
-                gestureManager.EndGesture(this);
+                spellHandler.CastSpell(gestureManager.EndGesture(this));
             }
         }
 
         gestureManager.Update(this, Time.deltaTime);
+
+        if (recordAction.GetStateDown(SteamVR_Input_Sources.RightHand))
+            gestureManager.SaveLastGesture(this, recordedType);
 
         //Deal with player movement
         CalcMovement();

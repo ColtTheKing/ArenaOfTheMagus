@@ -13,7 +13,7 @@ public class GestureManager
     private int samplesPerGesture;
 
     // Start is called before the first frame update
-    public GestureManager(float sampleTime, float accuracyPerSample, int samplesPerGesture)
+    public GestureManager(float sampleTime, float accuracyPerSample, int samplesPerGesture, bool clearJSON)
     {
         oneHandGestures = new List<Gesture>();
         twoHandGestures = new List<Gesture>();
@@ -28,8 +28,8 @@ public class GestureManager
         lNextSample = -1;
         rNextSample = -1;
 
-        //Uncomment this to clear the json
-        ClearJSON();
+        if(clearJSON)
+            ClearJSON();
 
         //Populate validGestures
         LoadJson();
@@ -111,18 +111,47 @@ public class GestureManager
 
     public SpellHandler.SpellType EndGesture(Player player)
     {
-        //Show the visual representation of what was recorded
-        //ShowSamples(player);
+        //If the gesture was already ended
+        if (lNextSample != -1 && rNextSample != -1)
+            return SpellHandler.SpellType.NONE;
+
+        Gesture.GestureHand hands = currentGesture.GetCurHands();
+
+        //If there's only 1 node in one of the hands just delete the gesture and stop cause otherwise bad things happen during conversion
+        if ((hands == Gesture.GestureHand.LEFT && currentGesture.NumNodes(Gesture.GestureHand.LEFT) < 2)
+            || (hands == Gesture.GestureHand.RIGHT && currentGesture.NumNodes(Gesture.GestureHand.RIGHT) < 2)
+            || (hands == Gesture.GestureHand.BOTH && (currentGesture.NumNodes(Gesture.GestureHand.LEFT) < 2 || currentGesture.NumNodes(Gesture.GestureHand.RIGHT) < 2)))
+        {
+            currentGesture = null;
+            return SpellHandler.SpellType.NONE;
+        }
 
         lNextSample = -1;
         rNextSample = -1;
 
+        currentGesture.ChangeNumNodes(samplesPerGesture);
+
         return FindBestMatch(currentGesture);
+    }
+
+    public void SaveLastGesture(Player player, SpellHandler.SpellType type)
+    {
+        if (currentGesture == null)
+            return;
+
+        //Show the visual representation of what was recorded
+        ShowSamples(player);
+
+        currentGesture.SetSpell(type);
+
+        SaveGesture(currentGesture);
+
+        Debug.Log("Saved Gesture for Spell Type: " + type);
     }
 
     private void ShowSamples(Player player)
     {
-        if (lNextSample >= 0)
+        if (currentGesture.GetCurHands() == Gesture.GestureHand.LEFT || currentGesture.GetCurHands() == Gesture.GestureHand.BOTH)
         {
             for (int i = 0; i < currentGesture.NumNodes(Gesture.GestureHand.LEFT); i++)
             {
@@ -130,7 +159,7 @@ public class GestureManager
             }
         }
 
-        if (rNextSample >= 0)
+        if (currentGesture.GetCurHands() == Gesture.GestureHand.RIGHT || currentGesture.GetCurHands() == Gesture.GestureHand.BOTH)
         {
             for (int i = 0; i < currentGesture.NumNodes(Gesture.GestureHand.RIGHT); i++)
             {
@@ -190,16 +219,7 @@ public class GestureManager
         //Write the json formatted text to the file
         System.IO.File.WriteAllText(GESTURE_PATH, writeText);
 
-        //Add gesture to list of valid gestures (do after in case of hand duplication)
-        if (g.GetCurHands() == Gesture.GestureHand.BOTH)
-        {
-            twoHandGestures.Add(g);
-        }
-        else
-        {
-            g.DuplicateHand(g.GetCurHands());
-            oneHandGestures.Add(g);
-        }
+        LoadJson();
     }
 
     private void ClearJSON()
@@ -211,6 +231,8 @@ public class GestureManager
         string text = JsonConvert.SerializeObject(gestures, Formatting.Indented);
 
         System.IO.File.WriteAllText(GESTURE_PATH, text);
+
+        Debug.Log("JSON File Cleared");
     }
 
     //Returns the index of the best match in validGestures or -1 if none are close enough
@@ -218,22 +240,22 @@ public class GestureManager
     {
         SpellHandler.SpellType bestMatch = SpellHandler.SpellType.NONE;
         float matchDiff = 0;
-
+        
         Gesture.GestureHand hands = inputGesture.GetCurHands();
-
+        
         if (hands == Gesture.GestureHand.BOTH)
         {
-            //Make sure the number of samples is correct for the left hand
-            List<Vector3> leftSamples = ConvertSamples(inputGesture, Gesture.GestureHand.LEFT);
-
-            //Make sure the number of samples is correct for the right hand
-            List<Vector3> rightSamples = ConvertSamples(inputGesture, Gesture.GestureHand.RIGHT);
-
-            foreach(Gesture g in twoHandGestures)
+            //If there's only 1 node just stop
+            if (inputGesture.NumNodes(Gesture.GestureHand.LEFT) < 2 || inputGesture.NumNodes(Gesture.GestureHand.RIGHT) < 2)
+                return bestMatch;
+            
+            foreach (Gesture g in twoHandGestures)
             {
-                float diff = g.AverageDifference(leftSamples, Gesture.GestureHand.LEFT)
-                    + g.AverageDifference(rightSamples, Gesture.GestureHand.RIGHT) / 2;
-
+                float diff = g.AverageDifference(inputGesture, Gesture.GestureHand.LEFT)
+                    + g.AverageDifference(inputGesture, Gesture.GestureHand.RIGHT) / 2;
+                
+                Debug.Log("diff = " + diff);
+                
                 if ((bestMatch == SpellHandler.SpellType.NONE && diff < accuracyPerSample) || diff < matchDiff)
                 {
                     bestMatch = g.GetSpell();
@@ -243,14 +265,17 @@ public class GestureManager
         }
         else
         {
-            //Make sure the number of samples is correct for the hand being used
-            List<Vector3> samples = ConvertSamples(inputGesture, hands);
-
+            //If there's only 1 node just stop
+            if (inputGesture.NumNodes(hands) < 2)
+                return bestMatch;
+            
             foreach (Gesture g in oneHandGestures)
             {
-                float diff = g.AverageDifference(samples, hands);
+                float diff = g.AverageDifference(inputGesture, hands);
+                
+                Debug.Log("diff = " + diff);
 
-                if((bestMatch == SpellHandler.SpellType.NONE && diff < accuracyPerSample) || diff < matchDiff)
+                if ((bestMatch == SpellHandler.SpellType.NONE && diff < accuracyPerSample) || diff < matchDiff)
                 {
                     bestMatch = g.GetSpell();
                     matchDiff = diff;
@@ -259,34 +284,5 @@ public class GestureManager
         }
 
         return bestMatch;
-    }
-
-    //Converts given samples into a number of new samples equal to samplesPerGesture
-    private List<Vector3> ConvertSamples(Gesture samples, Gesture.GestureHand hand)
-    {
-        List<Vector3> samplesConverted = new List<Vector3>();
-
-        //First node will be the same
-        samplesConverted.Add(samples.NodeAt(0, hand));
-
-        //The relative length of the segments between the samples
-        float segment = (float)(samples.NumNodes(hand) - 1) / (samplesPerGesture - 1);
-
-        for (int i = 1; i < samplesPerGesture - 1; i++)
-        {
-            float curSegment = segment * i;
-            Vector3 curSample = samples.NodeAt(Mathf.FloorToInt(curSegment), hand);
-            float percentAlong = curSegment % 1;
-
-            Vector3 changeVec = samples.NodeAt(Mathf.FloorToInt(curSegment) + 1, hand) - curSample;
-            changeVec *= percentAlong;
-
-            samplesConverted.Add(curSample + changeVec);
-        }
-
-        //The last node will be the same
-        samplesConverted.Add(samples.NodeAt(samples.NumNodes(hand) - 1, hand));
-
-        return samplesConverted;
     }
 }

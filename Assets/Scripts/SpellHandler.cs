@@ -30,7 +30,13 @@ public class SpellHandler
 
     public void CastSpell(SpellType type)
     {
+        Debug.Log("Cast Spell: " + type);
 
+        switch(type)
+        {
+            case SpellType.NONE:
+                return;
+        }
     }
 
     //Have a bunch of functions for each spell

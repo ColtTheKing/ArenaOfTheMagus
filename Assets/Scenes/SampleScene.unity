@@ -483,12 +483,27 @@ PrefabInstance:
     - target: {fileID: 3287993642267572416, guid: 1e3330c4336516a4f965ba2c7de264ad,
         type: 3}
       propertyPath: accuracyPerSample
-      value: 1
+      value: 0.1
       objectReference: {fileID: 0}
     - target: {fileID: 3287993642267572416, guid: 1e3330c4336516a4f965ba2c7de264ad,
         type: 3}
       propertyPath: samplesPerGesture
       value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 3287993642267572416, guid: 1e3330c4336516a4f965ba2c7de264ad,
+        type: 3}
+      propertyPath: recordAction.actionPath
+      value: /actions/default/in/GrabGrip
+      objectReference: {fileID: 0}
+    - target: {fileID: 3287993642267572416, guid: 1e3330c4336516a4f965ba2c7de264ad,
+        type: 3}
+      propertyPath: recordedType
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3287993642267572416, guid: 1e3330c4336516a4f965ba2c7de264ad,
+        type: 3}
+      propertyPath: clearJSON
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3287993643610523305, guid: 1e3330c4336516a4f965ba2c7de264ad,
         type: 3}

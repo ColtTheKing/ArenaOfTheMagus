@@ -148,15 +148,19 @@ public class Gesture
         switch (hand)
         {
             case GestureHand.LEFT:
-                if (leftNodes != null)
+                if (leftNodes == null)
+                    throw new System.Exception("This hand does not exist in this gesture");
+                else if (index >= leftNodes.Count)
+                    throw new System.Exception("Node index is too high. Count is " + leftNodes.Count + ", but index is " + index);
+                else
                     return leftNodes[index];
-                else
-                    throw new System.Exception("This hand does not exist in this gesture");
             case GestureHand.RIGHT:
-                if (rightNodes != null)
-                    return rightNodes[index];
-                else
+                if (rightNodes == null)
                     throw new System.Exception("This hand does not exist in this gesture");
+                else if (index >= rightNodes.Count)
+                    throw new System.Exception("Node index is too high. Count is " + rightNodes.Count + ", but index is " + index);
+                else
+                    return rightNodes[index];
             default:
                 throw new System.Exception("Unable to get the node at more than one hand");
         }
@@ -181,20 +185,67 @@ public class Gesture
         }
     }
 
-    //Don't remember what this was for lol
-    public void ChangeNumNodes(GestureHand hand)
+    //Converts the nodes on each hand into a number of new nodes equal to numNodes
+    public void ChangeNumNodes(int numNodes)
     {
-        switch (hand)
+        if (leftNodes != null)
         {
-            case GestureHand.LEFT:
-                
-                break;
-            case GestureHand.RIGHT:
-                
-                break;
-            case GestureHand.BOTH:
-                
-                break;
+            List<Vector3> nodesConverted = new List<Vector3>();
+
+            //First node will be the same
+            nodesConverted.Add(NodeAt(0, GestureHand.LEFT));
+
+            //The relative length of the segments between the samples
+            float segment = (float)(NumNodes(GestureHand.LEFT) - 1) / (numNodes - 1);
+
+            for (int i = 1; i < numNodes - 1; i++)
+            {
+                float curSegment = segment * i;
+
+                Vector3 curSample = NodeAt(Mathf.FloorToInt(curSegment), GestureHand.LEFT);
+                float percentAlong = curSegment % 1;
+
+                Vector3 changeVec = NodeAt(Mathf.FloorToInt(curSegment) + 1, GestureHand.LEFT) - curSample;
+                changeVec *= percentAlong;
+
+                nodesConverted.Add(curSample + changeVec);
+            }
+
+            //The last node will be the same
+            nodesConverted.Add(NodeAt(NumNodes(GestureHand.LEFT) - 1, GestureHand.LEFT));
+
+            //Actually set the nodes to the new converted ones
+            leftNodes = nodesConverted;
+        }
+
+        if (rightNodes != null)
+        {
+            List<Vector3> nodesConverted = new List<Vector3>();
+
+            //First node will be the same
+            nodesConverted.Add(NodeAt(0, GestureHand.RIGHT));
+
+            //The relative length of the segments between the samples
+            float segment = (float)(NumNodes(GestureHand.RIGHT) - 1) / (numNodes - 1);
+
+            for (int i = 1; i < numNodes - 1; i++)
+            {
+                float curSegment = segment * i;
+
+                Vector3 curSample = NodeAt(Mathf.FloorToInt(curSegment), GestureHand.RIGHT);
+                float percentAlong = curSegment % 1;
+
+                Vector3 changeVec = NodeAt(Mathf.FloorToInt(curSegment) + 1, GestureHand.RIGHT) - curSample;
+                changeVec *= percentAlong;
+
+                nodesConverted.Add(curSample + changeVec);
+            }
+
+            //The last node will be the same
+            nodesConverted.Add(NodeAt(NumNodes(GestureHand.RIGHT) - 1, GestureHand.RIGHT));
+
+            //Actually set the nodes to the new converted ones
+            rightNodes = nodesConverted;
         }
     }
 
@@ -218,14 +269,14 @@ public class Gesture
         return spell;
     }
 
-    public float AverageDifference(List<Vector3> samples, GestureHand hand)
+    public float AverageDifference(Gesture toCompare, GestureHand hand)
     {
         float diff = 0;
         int numNodes = NumNodes(hand);
 
         for (int i = 0; i < numNodes; i++)
         {
-            Vector3 diffVec = NodeAt(i, hand) - samples[i];
+            Vector3 diffVec = NodeAt(i, hand) - toCompare.NodeAt(i, hand);
 
             diff += diffVec.magnitude;
         }
