@@ -1,5 +1,7 @@
 {
-   "app_key" : "application.generated.unity.steamvr.exe",
+   "action_manifest_version" : 0,
+   "alias_info" : {},
+   "app_key" : "application.generated.unity.arenaofthemagus.exe",
    "bindings" : {
       "/actions/buggy" : {
          "sources" : [
@@ -110,10 +112,13 @@
             {
                "inputs" : {
                   "click" : {
-                     "output" : "/actions/default/in/teleport"
+                     "output" : "/actions/default/in/trackrun"
+                  },
+                  "position" : {
+                     "output" : "/actions/default/in/trackmove"
                   }
                },
-               "mode" : "button",
+               "mode" : "trackpad",
                "path" : "/user/hand/left/input/trackpad"
             },
             {
@@ -169,10 +174,13 @@
             {
                "inputs" : {
                   "click" : {
-                     "output" : "/actions/default/in/teleport"
+                     "output" : "/actions/default/in/trackrun"
+                  },
+                  "position" : {
+                     "output" : "/actions/default/in/trackmove"
                   }
                },
-               "mode" : "button",
+               "mode" : "trackpad",
                "path" : "/user/hand/right/input/trackpad"
             },
             {
@@ -250,7 +258,10 @@
          ]
       }
    },
+   "category" : "steamvr_input",
    "controller_type" : "vive_controller",
-   "description" : "",
-   "name" : "vive_controller"
+   "description" : "Default",
+   "name" : "vive_controller",
+   "options" : {},
+   "simulated_actions" : []
 }

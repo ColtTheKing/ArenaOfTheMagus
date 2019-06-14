@@ -284,9 +284,12 @@ public class Gesture
         return diff / numNodes;
     }
 
-    public void DuplicateHand(GestureHand hand)
+    public void DuplicateHand()
     {
-        if (hand == GestureHand.LEFT)
+        if (curHands == GestureHand.BOTH)
+            return;
+
+        if (rightNodes == null)
         {
             //Add a right hand to copy onto
             AddHand(GestureHand.RIGHT);
@@ -300,7 +303,7 @@ public class Gesture
                 rightNodes.Add(temp);
             }
         }
-        else if (hand == GestureHand.RIGHT)
+        else if (leftNodes == null)
         {
             //Add a left hand to copy onto
             AddHand(GestureHand.LEFT);

@@ -9,6 +9,7 @@ public class Player : MonoBehaviour
     public SteamVR_Action_Single grabAction;
     public SteamVR_Action_Vector2 moveAction;
     public SteamVR_Action_Boolean recordAction;
+    public SteamVR_Action_Boolean runAction;
 
     public PlayerHand leftHand, rightHand;
     public GameObject playerHead;
@@ -18,7 +19,7 @@ public class Player : MonoBehaviour
 
     public SpellHandler.SpellElement spellElement;
 
-    public float moveSpeed, sampleTime, accuracyPerSample;
+    public float moveSpeed, runMultiplier, sampleTime, accuracyPerSample;
 
     public int samplesPerGesture;
 
@@ -58,7 +59,7 @@ public class Player : MonoBehaviour
             if (leftHand.GetGrabbing())
             {
                 leftHand.ToggleGrabbing();
-                spellHandler.CastSpell(gestureManager.EndGesture(this));
+                spellHandler.CastSpell(gestureManager.EndGesture(this), this);
             }
         }
 
@@ -75,13 +76,13 @@ public class Player : MonoBehaviour
             if (rightHand.GetGrabbing())
             {
                 rightHand.ToggleGrabbing();
-                spellHandler.CastSpell(gestureManager.EndGesture(this));
+                spellHandler.CastSpell(gestureManager.EndGesture(this), this);
             }
         }
 
         gestureManager.Update(this, Time.deltaTime);
 
-        if (recordAction.GetStateDown(SteamVR_Input_Sources.RightHand))
+        if (recordAction.GetStateDown(SteamVR_Input_Sources.LeftHand) || recordAction.GetStateDown(SteamVR_Input_Sources.RightHand))
             gestureManager.SaveLastGesture(this, recordedType);
 
         //Deal with player movement
@@ -95,6 +96,11 @@ public class Player : MonoBehaviour
 
         if (trackPos.x == 0.0f && trackPos.y == 0.0f)
             return;
+
+        float runMult = 1.0f;
+        
+        if (runAction.GetState(SteamVR_Input_Sources.RightHand))
+            runMult = runMultiplier;
 
         float h, trackRot, theta, xMove, yMove;
 
@@ -143,7 +149,7 @@ public class Player : MonoBehaviour
         xMove *= h * Mathf.Sin(theta);
         yMove *= h * Mathf.Cos(theta);
 
-        transform.position = transform.position + new Vector3(xMove * moveSpeed, 0, yMove * moveSpeed);
+        transform.position = transform.position + new Vector3(xMove * moveSpeed * runMult, 0, yMove * moveSpeed * runMult);
     }
 
     public void CreateSample(Vector3 pos)

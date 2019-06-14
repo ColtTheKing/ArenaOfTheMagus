@@ -6,10 +6,11 @@ public class SpellHandler
 {
     public enum SpellType
     {
-        ONE_SPELL1,
-        ONE_SPELL2,
-        TWO_SPELL1,
-        TWO_SPELL2,
+        ONE_QUICK,
+        ONE_HEAVY,
+        ONE_SPECIAL,
+        TWO_DEFENSE,
+        TWO_OFFENSE,
         NONE
     };
 
@@ -28,7 +29,7 @@ public class SpellHandler
         this.element = element;
     }
 
-    public void CastSpell(SpellType type)
+    public void CastSpell(SpellType type, Player player)
     {
         Debug.Log("Cast Spell: " + type);
 

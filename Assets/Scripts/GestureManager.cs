@@ -69,7 +69,8 @@ public class GestureManager
 
     public void BeginGesture(Player player, bool left)
     {
-        if(left)
+
+        if (left)
         {
             //If this is the first hand of the gesture
             if (rNextSample == -1)
@@ -112,8 +113,11 @@ public class GestureManager
     public SpellHandler.SpellType EndGesture(Player player)
     {
         //If the gesture was already ended
-        if (lNextSample != -1 && rNextSample != -1)
+        if (lNextSample == -1 && rNextSample == -1)
             return SpellHandler.SpellType.NONE;
+
+        lNextSample = -1;
+        rNextSample = -1;
 
         Gesture.GestureHand hands = currentGesture.GetCurHands();
 
@@ -125,10 +129,7 @@ public class GestureManager
             currentGesture = null;
             return SpellHandler.SpellType.NONE;
         }
-
-        lNextSample = -1;
-        rNextSample = -1;
-
+        
         currentGesture.ChangeNumNodes(samplesPerGesture);
 
         return FindBestMatch(currentGesture);
@@ -185,6 +186,9 @@ public class GestureManager
 
         oneHandGestures = gestures[0];
         twoHandGestures = gestures[1];
+
+        for (int i = 0; i < oneHandGestures.Count; i++)
+            oneHandGestures[i].DuplicateHand();
     }
 
     //Define a new gesture to be put in the json file
