@@ -14,14 +14,14 @@ public class Player : MonoBehaviour
     public PlayerHand leftHand, rightHand;
     public GameObject playerHead;
 
+    public float pointerLength;
+
     //Temporary visualization of the gesture
     public GameObject sample;
 
-    public SpellHandler.SpellElement spellElement;
-
     public float moveSpeed, runMultiplier, sampleTime, accuracyPerSample;
 
-    public int samplesPerGesture;
+    public int samplesPerGesture, startingHP;
 
     public bool showSamples, clearJSON;
 
@@ -29,11 +29,11 @@ public class Player : MonoBehaviour
 
     private GestureManager gestureManager;
     private SpellHandler spellHandler;
-
-    private void Awake()
-    {
-        
-    }
+    private Health healthComp;
+    private Vector3 velocity;
+    private GameManager gameManager;
+    private LineRenderer menuPointer;
+    private bool leftHandPointing;
 
     void Start()
     {
@@ -41,11 +41,29 @@ public class Player : MonoBehaviour
 
         gestureManager = new GestureManager(sampleTime, accuracyPerSample, samplesPerGesture, clearJSON);
 
-        spellHandler = new SpellHandler(spellElement);
+        spellHandler = GetComponent<SpellHandler>();
+
+        gameManager = GetComponent<GameManager>();
+
+        healthComp = new Health(startingHP);
+
+        menuPointer = GetComponent<LineRenderer>();
     }
 
     void Update()
     {
+        if (gameManager.InGame())
+            UpdateGame();
+        else
+            UpdateMenu();
+    }
+
+    private void UpdateGame()
+    {
+        if (!healthComp.Alive())
+            Debug.Log("Player died, end game");
+
+        //Deal with gesture starting and stopping and hand grabbing
         if (grabAction.GetAxis(SteamVR_Input_Sources.LeftHand) >= 0.1f)
         {
             if (!leftHand.GetGrabbing())
@@ -59,7 +77,59 @@ public class Player : MonoBehaviour
             if (leftHand.GetGrabbing())
             {
                 leftHand.ToggleGrabbing();
-                spellHandler.CastSpell(gestureManager.EndGesture(this), this);
+                spellHandler.CastSpell(gestureManager.EndGesture(this), gestureManager.CurrentHand());
+            }
+        }
+
+        if (grabAction.GetAxis(SteamVR_Input_Sources.RightHand) >= 0.1f)
+        {
+            if (!rightHand.GetGrabbing())
+            {
+                leftHand.ToggleGrabbing();
+                gestureManager.BeginGesture(this, false);
+            }
+        }
+        else
+        {
+            if (rightHand.GetGrabbing())
+            {
+                leftHand.ToggleGrabbing();
+                spellHandler.CastSpell(gestureManager.EndGesture(this), gestureManager.CurrentHand());
+            }
+        }
+
+        gestureManager.Update(this, Time.deltaTime);
+
+        //Deal with saving gestures WILL BE REMOVED LATER
+        if (recordAction.GetStateDown(SteamVR_Input_Sources.LeftHand) || recordAction.GetStateDown(SteamVR_Input_Sources.RightHand))
+            gestureManager.SaveLastGesture(this, recordedType);
+
+        //Deal with player movement
+        CalcMovement();
+    }
+
+    private void UpdateMenu()
+    {
+        bool click = false;
+
+        //Deal with clicking and hand grabbing
+        if (grabAction.GetAxis(SteamVR_Input_Sources.LeftHand) >= 0.1f)
+        {
+            if (!leftHand.GetGrabbing())
+            {
+                leftHand.ToggleGrabbing();
+
+                if(leftHandPointing)
+                    click = true;
+                else
+                    leftHandPointing = true;
+            }
+        }
+        else
+        {
+            if (leftHand.GetGrabbing())
+            {
+                leftHand.ToggleGrabbing();
             }
         }
 
@@ -68,7 +138,11 @@ public class Player : MonoBehaviour
             if (!rightHand.GetGrabbing())
             {
                 rightHand.ToggleGrabbing();
-                gestureManager.BeginGesture(this, false);
+
+                if(!leftHandPointing)
+                    click = true;
+                else
+                    leftHandPointing = false;
             }
         }
         else
@@ -76,17 +150,44 @@ public class Player : MonoBehaviour
             if (rightHand.GetGrabbing())
             {
                 rightHand.ToggleGrabbing();
-                spellHandler.CastSpell(gestureManager.EndGesture(this), this);
             }
         }
 
-        gestureManager.Update(this, Time.deltaTime);
+        if (leftHandPointing)
+        {
+            PointAtMenu(leftHand, click);
+        }
+        else
+        {
+            PointAtMenu(rightHand, click);
+        }
+    }
 
-        if (recordAction.GetStateDown(SteamVR_Input_Sources.LeftHand) || recordAction.GetStateDown(SteamVR_Input_Sources.RightHand))
-            gestureManager.SaveLastGesture(this, recordedType);
+    private void PointAtMenu(PlayerHand hand, bool click)
+    {
+        RaycastHit hit;
 
-        //Deal with player movement
-        CalcMovement();
+        Physics.Raycast(hand.transform.position, hand.transform.forward, out hit, pointerLength);
+
+        //Display the menu pointer
+        Vector3 pointerEnd;
+
+        if (hit.collider != null)
+            pointerEnd = hit.point;
+        else
+            pointerEnd = hand.transform.position + (hand.transform.forward * pointerLength);
+
+        menuPointer.SetPosition(0, hand.transform.position);
+        menuPointer.SetPosition(1, pointerEnd);
+
+        //If the player pressed the trigger on a button activate the button
+        if (click && hit.collider != null)
+        {
+            MenuButton button = hit.transform.gameObject.GetComponent<MenuButton>();
+
+            if (button != null)
+                gameManager.PressMenuButton(button.buttonId);
+        }
     }
 
     private void CalcMovement()
@@ -149,7 +250,16 @@ public class Player : MonoBehaviour
         xMove *= h * Mathf.Sin(theta);
         yMove *= h * Mathf.Cos(theta);
 
-        transform.position = transform.position + new Vector3(xMove * moveSpeed * runMult, 0, yMove * moveSpeed * runMult);
+        velocity = new Vector3(xMove, 0, yMove).normalized * moveSpeed * runMult;
+
+        transform.position = transform.position + (velocity * Time.deltaTime);
+    }
+
+    public void Damage(int damage)
+    {
+        healthComp.TakeDamage(damage);
+
+        //maybe add damaged sound effect
     }
 
     public void CreateSample(Vector3 pos)
@@ -159,5 +269,21 @@ public class Player : MonoBehaviour
 
         GameObject instNode = Instantiate(sample);
         instNode.transform.position = playerHead.transform.position + pos;
+    }
+
+    public Vector3 GetVelocity()
+    {
+        return velocity;
+    }
+
+    public void SetElements(SpellHandler.SpellElement leftElement, SpellHandler.SpellElement rightElement)
+    {
+        spellHandler.elementLeft = leftElement;
+        spellHandler.elementRight = rightElement;
+    }
+
+    public void ToggleMenuPointer(bool enabled)
+    {
+        menuPointer.enabled = enabled;
     }
 }

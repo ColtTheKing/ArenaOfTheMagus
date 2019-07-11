@@ -150,6 +150,14 @@ public class GestureManager
         Debug.Log("Saved Gesture for Spell Type: " + type);
     }
 
+    public Gesture.GestureHand CurrentHand()
+    {
+        if(currentGesture != null)
+            return currentGesture.curHands;
+
+        return Gesture.GestureHand.BOTH;
+    }
+
     private void ShowSamples(Player player)
     {
         if (currentGesture.GetCurHands() == Gesture.GestureHand.LEFT || currentGesture.GetCurHands() == Gesture.GestureHand.BOTH)

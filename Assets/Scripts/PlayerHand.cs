@@ -19,7 +19,6 @@ public class PlayerHand : MonoBehaviour
     private void Awake()
     {
         sampleTime = TIME_BETWEEN_SAMPLES;
-        grabbing = false;
     }
 
     void Start()
@@ -67,7 +66,7 @@ public class PlayerHand : MonoBehaviour
         grabbing = !grabbing;
     }
 
-    void CreateSample()
+    public void CreateSample()
     {
         if (!showSamples)
             return;
