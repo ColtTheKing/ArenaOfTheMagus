@@ -15,10 +15,12 @@ public class Enemy : MonoBehaviour
     private int flockId;
     private EnemyFlock flock;
     private Vector3 velocity, wanderLocation;
+    private bool alive;
 
     void Start()
     {
         healthComp = new Health(startingHP);
+        alive = true;
     }
 
     // Update is called once per frame
@@ -28,9 +30,7 @@ public class Enemy : MonoBehaviour
         DecideBehaviour(Time.deltaTime);
 
         if (!healthComp.Update(Time.deltaTime))
-        {
-            Destroy(gameObject);
-        }
+            MarkToKill();
 
         if (onFire > 0)
         {
@@ -223,8 +223,18 @@ public class Enemy : MonoBehaviour
         return avoid;
     }
 
+    public void MarkToKill()
+    {
+        alive = false;
+    }
+
     public void Kill()
     {
         Destroy(gameObject);
+    }
+
+    public bool GetAlive()
+    {
+        return alive;
     }
 }

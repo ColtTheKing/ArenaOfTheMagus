@@ -7,13 +7,13 @@ public class RoundManager : MonoBehaviour
     public Enemy enemy;
     public List<Vector3> enemyFlockOffsets;
     public Vector3 flockPosition; //will be generated later
-    public int numRounds;
+    public List<int> flocksPerRound;
     public float timeBetweenSpawns, wanderFrequency, wanderRadius;
     public bool spawnEnemies;
     public List<Obstacle> obstacles;
 
     private bool inGame;
-    private int currentRound;
+    private int currentRound, flocksKilled;
     private float spawnTimer;
     private List<EnemyFlock> flocks;
     private Player player;
@@ -22,6 +22,7 @@ public class RoundManager : MonoBehaviour
     {
         currentRound = 0;
         spawnTimer = 0;
+        flocksKilled = 0;
 
         flocks = new List<EnemyFlock>();
         player = GetComponent<Player>();
@@ -35,16 +36,25 @@ public class RoundManager : MonoBehaviour
 
         spawnTimer += Time.deltaTime;
 
-        for(int i = 0; i < flocks.Count; i++)
-        {
-            //If the flock has been killed remove it from the list
-            if (flocks[i].flockMembers.Count == 0)
-                flocks.RemoveAt(i--);
-        }
+        //for(int i = 0; i < flocks.Count; i++)
+        //{
+        //    //If the flock has been killed remove it from the list
+        //    if (flocks[i].flockMembers.Count == 0)
+        //    {
+        //        flocks.RemoveAt(i--);
+        //        flocksKilled++;
+        //        Debug.Log("Flock Killed");
+        //    }
+        //}
+
+        ////If all the flocks are dead start the next round
+        //if (flocksKilled == flocksPerRound[currentRound])
+        //    NextRound();
 
         //When time has passed make a flock
-        if (spawnTimer >= timeBetweenSpawns && currentRound < numRounds)
+        if (spawnTimer >= timeBetweenSpawns && flocks.Count < flocksPerRound[currentRound])
         {
+            Debug.Log("Make Flock");
             List<Enemy> enemies = new List<Enemy>();
 
             for (int i = 0; i < enemyFlockOffsets.Count; i++)
@@ -59,10 +69,6 @@ public class RoundManager : MonoBehaviour
             }
 
             flocks.Add(new EnemyFlock(enemies, flockPosition, wanderRadius, wanderFrequency, player, obstacles));
-
-            //Should only fire when all enemies from the previous wave are defeated
-            //For now, fires after previous wave has finished spawning
-            currentRound++;
 
             spawnTimer = 0;
         }
@@ -79,6 +85,20 @@ public class RoundManager : MonoBehaviour
     {
         inGame = true;
         player.ToggleMenuPointer(false);
+    }
+
+    public void NextRound()
+    {
+        Debug.Log("Next Round");
+        if (++currentRound >= flocksPerRound.Count)
+        {
+            EndRounds();
+        }
+        else
+        {
+            spawnTimer = 0;
+            flocksKilled = 0;
+        }
     }
 
     public void EndRounds()

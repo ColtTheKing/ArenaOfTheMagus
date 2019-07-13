@@ -5127,8 +5127,8 @@ MonoBehaviour:
   - {x: 0, y: 0, z: -2}
   - {x: -2, y: 0, z: 0}
   flockPosition: {x: 0, y: 1, z: 2}
-  numRounds: 1
-  timeBetweenSpawns: 2
+  flocksPerRound: 010000000200000002000000
+  timeBetweenSpawns: 5
   wanderFrequency: 0.5
   wanderRadius: 10
   spawnEnemies: 1
