@@ -49,12 +49,12 @@ public class Health
         return alive;
     }
 
-    public void TakeDamage(int damage)
+    public bool TakeDamage(int damage)
     {
         if (damage <= shieldHP)
         {
             shieldHP -= damage;
-            return;
+            return alive;
         }
         else
         {
@@ -66,6 +66,8 @@ public class Health
             alive = false;
             Debug.Log("Character has died");
         }
+
+        return alive;
     }
 
     public void Heal(int health)

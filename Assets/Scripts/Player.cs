@@ -33,7 +33,7 @@ public class Player : MonoBehaviour
     private Vector3 velocity;
     private GameManager gameManager;
     private LineRenderer menuPointer;
-    private bool leftHandPointing, alive;
+    private bool leftHandPointing;
 
     void Start()
     {
@@ -60,12 +60,6 @@ public class Player : MonoBehaviour
 
     private void UpdateGame()
     {
-        if (!healthComp.Alive())
-        {
-            Debug.Log("player died");
-            gameManager.EndGame();
-        }
-
         //Deal with gesture starting and stopping and hand grabbing
         if (grabAction.GetAxis(SteamVR_Input_Sources.LeftHand) >= 0.1f)
         {
@@ -261,10 +255,15 @@ public class Player : MonoBehaviour
 
     public void Damage(int damage)
     {
-        healthComp.TakeDamage(damage);
+        //maybe add damaged sound effect
         Debug.Log("ouch");
 
-        //maybe add damaged sound effect
+        //If damage killed the player
+        if (!healthComp.TakeDamage(damage))
+        {
+            Debug.Log("player died");
+            gameManager.EndGame();
+        }
     }
 
     public void ResetHealth()
