@@ -33,7 +33,7 @@ public class Player : MonoBehaviour
     private Vector3 velocity;
     private GameManager gameManager;
     private LineRenderer menuPointer;
-    private bool leftHandPointing;
+    private bool leftHandPointing, alive;
 
     void Start()
     {
@@ -61,7 +61,10 @@ public class Player : MonoBehaviour
     private void UpdateGame()
     {
         if (!healthComp.Alive())
-            Debug.Log("Player died, end game");
+        {
+            Debug.Log("player died");
+            gameManager.EndGame();
+        }
 
         //Deal with gesture starting and stopping and hand grabbing
         if (grabAction.GetAxis(SteamVR_Input_Sources.LeftHand) >= 0.1f)
@@ -85,7 +88,7 @@ public class Player : MonoBehaviour
         {
             if (!rightHand.GetGrabbing())
             {
-                leftHand.ToggleGrabbing();
+                rightHand.ToggleGrabbing();
                 gestureManager.BeginGesture(this, false);
             }
         }
@@ -93,8 +96,9 @@ public class Player : MonoBehaviour
         {
             if (rightHand.GetGrabbing())
             {
-                leftHand.ToggleGrabbing();
+                rightHand.ToggleGrabbing();
                 spellHandler.CastSpell(gestureManager.EndGesture(this), gestureManager.CurrentHand());
+                Application.Quit();
             }
         }
 
@@ -258,8 +262,14 @@ public class Player : MonoBehaviour
     public void Damage(int damage)
     {
         healthComp.TakeDamage(damage);
+        Debug.Log("ouch");
 
         //maybe add damaged sound effect
+    }
+
+    public void ResetHealth()
+    {
+        healthComp = new Health(startingHP);
     }
 
     public void CreateSample(Vector3 pos)
@@ -285,5 +295,10 @@ public class Player : MonoBehaviour
     public void ToggleMenuPointer(bool enabled)
     {
         menuPointer.enabled = enabled;
+    }
+
+    public Vector3 GetPos()
+    {
+        return playerHead.transform.position;
     }
 }

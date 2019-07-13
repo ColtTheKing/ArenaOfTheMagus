@@ -38,6 +38,14 @@ public class EnemyFlock
         wanderTimer -= deltaTime;
     }
 
+    public void KillFlock()
+    {
+        foreach(Enemy e in flockMembers)
+            e.Kill();
+
+        flockMembers.Clear();
+    }
+
     private void ChangeWanderLocation()
     {
         wanderTimer = wanderFrequency;

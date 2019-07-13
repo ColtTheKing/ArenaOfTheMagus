@@ -24,7 +24,8 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        if (!roundManager.GameOngoing())
+            EndGame();
     }
 
     public void PressMenuButton(int buttonId)
@@ -47,6 +48,17 @@ public class GameManager : MonoBehaviour
         spellHandler.elementLeft = leftElement;
         spellHandler.elementRight = rightElement;
 
-        roundManager.StartRound();
+        roundManager.StartRounds();
+    }
+
+    public void EndGame()
+    {
+        gameStarted = false;
+
+        if (roundManager.GameOngoing())
+            roundManager.EndRounds();
+
+        foreach (GameObject g in menuWalls)
+            g.SetActive(true);
     }
 }

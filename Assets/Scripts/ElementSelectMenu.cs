@@ -39,7 +39,7 @@ public class ElementSelectMenu : MenuScreen
         rightWaterButton.Init(5, SpellHandler.SpellElement.WATER, false, this);
         rightEarthButton.Init(6, SpellHandler.SpellElement.EARTH, false, this);
         rightAirButton.Init(7, SpellHandler.SpellElement.AIR, false, this);
-        fightButton.Init(8, gameManager, this);
+        fightButton.Init(8, gameManager, this, mainMenu);
         backButton.Init(9, this, mainMenu);
     }
 

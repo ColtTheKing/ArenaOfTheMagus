@@ -317,8 +317,8 @@ public class SpellHandler : MonoBehaviour
     private void FireSpecial(bool left)
     {
         Spell fireCone = Instantiate(specialFire);
-        fireCone.transform.position = new Vector3(player.transform.position.x, 0, player.transform.position.z)
-            + new Vector3(player.transform.forward.x, 0, player.transform.forward.z);
+        fireCone.transform.position = new Vector3(player.GetPos().x, 0, player.GetPos().z)
+            + new Vector3(player.GetPos().x, 0, player.GetPos().z);
     }
 
     private void WaterSpecial(bool left)
