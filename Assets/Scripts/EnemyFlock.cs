@@ -14,7 +14,7 @@ public class EnemyFlock
     public EnemyFlock(List<Enemy> enemies, Vector3 origin, float wanderRadius, float wanderFrequency, Player player, List<Obstacle> obstacles)
     {
         flockMembers = enemies;
-
+        Debug.Log("flock ctor");
         this.origin = origin;
         this.wanderRadius = wanderRadius;
         this.wanderFrequency = wanderFrequency;
@@ -29,6 +29,15 @@ public class EnemyFlock
 
     public void Update(float deltaTime)
     {
+        for (int i = 0; i < flockMembers.Count; i++)
+        {
+            if (!flockMembers[i].GetAlive())
+            {
+                flockMembers[i].Kill();
+                flockMembers.RemoveAt(i--);
+            }
+        }
+
         //When the time is up, pick another location to wander to
         if (wanderTimer <= 0)
         {
