@@ -36,25 +36,23 @@ public class RoundManager : MonoBehaviour
 
         spawnTimer += Time.deltaTime;
 
-        //for(int i = 0; i < flocks.Count; i++)
-        //{
-        //    //If the flock has been killed remove it from the list
-        //    if (flocks[i].flockMembers.Count == 0)
-        //    {
-        //        flocks.RemoveAt(i--);
-        //        flocksKilled++;
-        //        Debug.Log("Flock Killed");
-        //    }
-        //}
+        for (int i = 0; i < flocks.Count; i++)
+        {
+            //If the flock has been killed remove it from the list
+            if (flocks[i].flockMembers.Count == 0)
+            {
+                flocks.RemoveAt(i--);
+                flocksKilled++;
+            }
+        }
 
-        ////If all the flocks are dead start the next round
-        //if (flocksKilled == flocksPerRound[currentRound])
-        //    NextRound();
+        //If all the flocks are dead start the next round
+        if (flocksKilled == flocksPerRound[currentRound])
+            NextRound();
 
         //When time has passed make a flock
         if (spawnTimer >= timeBetweenSpawns && flocks.Count < flocksPerRound[currentRound])
         {
-            Debug.Log("Make Flock");
             List<Enemy> enemies = new List<Enemy>();
 
             for (int i = 0; i < enemyFlockOffsets.Count; i++)
@@ -89,7 +87,6 @@ public class RoundManager : MonoBehaviour
 
     public void NextRound()
     {
-        Debug.Log("Next Round");
         if (++currentRound >= flocksPerRound.Count)
         {
             EndRounds();

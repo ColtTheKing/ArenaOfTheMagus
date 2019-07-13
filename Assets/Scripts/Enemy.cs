@@ -17,10 +17,14 @@ public class Enemy : MonoBehaviour
     private Vector3 velocity, wanderLocation;
     private bool alive;
 
+    void Awake()
+    {
+        alive = true;
+    }
+
     void Start()
     {
         healthComp = new Health(startingHP);
-        alive = true;
     }
 
     // Update is called once per frame
