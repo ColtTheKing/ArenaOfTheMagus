@@ -81,6 +81,8 @@ public class MainMenu : MenuScreen
     public override void ActivateMenu()
     {
         base.ActivateMenu();
+
+        curMenu = 0;
     }
 
     public override void SwapMenu(int menuId)

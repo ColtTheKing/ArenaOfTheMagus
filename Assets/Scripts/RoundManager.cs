@@ -12,7 +12,7 @@ public class RoundManager : MonoBehaviour
     public bool spawnEnemies;
     public List<Obstacle> obstacles;
 
-    private bool roundStarted;
+    private bool inGame;
     private int currentRound;
     private float spawnTimer;
     private List<EnemyFlock> flocks;
@@ -30,7 +30,7 @@ public class RoundManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!roundStarted || !spawnEnemies)
+        if (!inGame || !spawnEnemies)
             return;
 
         spawnTimer += Time.deltaTime;
@@ -75,9 +75,30 @@ public class RoundManager : MonoBehaviour
         }
     }
 
-    public void StartRound()
+    public void StartRounds()
     {
-        roundStarted = true;
+        inGame = true;
         player.ToggleMenuPointer(false);
+    }
+
+    public void EndRounds()
+    {
+        foreach (EnemyFlock f in flocks)
+            f.KillFlock();
+
+        flocks.Clear();
+
+        currentRound = 0;
+        spawnTimer = 0;
+
+        inGame = false;
+        player.ToggleMenuPointer(true);
+        player.transform.position = new Vector3(0, 0, 0);
+        player.ResetHealth();
+    }
+
+    public bool GameOngoing()
+    {
+        return inGame;
     }
 }

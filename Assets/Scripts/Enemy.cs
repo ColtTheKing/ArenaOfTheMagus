@@ -67,7 +67,10 @@ public class Enemy : MonoBehaviour
             }
             else
             {
-                if ((flock.player.transform.position - transform.position).magnitude <= attackRange)
+                Vector2 playerDist = new Vector2(flock.player.GetPos().x, flock.player.GetPos().z)
+                    - new Vector2(transform.position.x, transform.position.z);
+
+                if (playerDist.magnitude <= attackRange)
                 {
                     AttackPlayer();
                 }
@@ -127,7 +130,7 @@ public class Enemy : MonoBehaviour
     private void PursuePlayer(float deltaTime)
     {
         //get velocity of player and move towards a point in front of them
-        Vector3 target = flock.player.transform.position + flock.player.GetVelocity() * pursueAheadDist;
+        Vector3 target = flock.player.GetPos() + flock.player.GetVelocity() * pursueAheadDist;
         target.y = 0;
 
         //find the direction towards that point
@@ -218,5 +221,10 @@ public class Enemy : MonoBehaviour
             avoid = avoid.normalized;
 
         return avoid;
+    }
+
+    public void Kill()
+    {
+        Destroy(gameObject);
     }
 }
