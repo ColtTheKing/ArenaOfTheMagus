@@ -14,7 +14,7 @@ public class EnemyFlock
     public EnemyFlock(List<Enemy> enemies, Vector3 origin, float wanderRadius, float wanderFrequency, Player player, List<Obstacle> obstacles)
     {
         flockMembers = enemies;
-        Debug.Log("flock ctor");
+        
         this.origin = origin;
         this.wanderRadius = wanderRadius;
         this.wanderFrequency = wanderFrequency;
@@ -66,7 +66,6 @@ public class EnemyFlock
 
         //Ensure the location is on the outside of the radius
         wanderLocation = wanderLocation.normalized * wanderRadius;
-        wanderLocation.y = 1;
 
         for(int i = 0; i < flockMembers.Count; i++)
         {
