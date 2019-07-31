@@ -5,51 +5,78 @@ using UnityEngine;
 public class Enemy : MonoBehaviour
 {
     public int startingHP, attackDamage;
-    public float speed, attackCooldown, attackRange;
+    public float baseSpeed, attackCooldown, attackRange, resistForce;
     //AI Movement Variables
     public float pursueDuration, pursueAheadDist, pursueRange, avoidDist, separationRadius, pursueCoefficient, avoidCoefficient, separationCoefficient, cohesionCoefficient, wanderCoefficient;
-    public Material baseMaterial, onFireMaterial;
+    public Material baseMaterial, weakenMaterial;
 
     private Health healthComp;
-    private float onFire, pursueTimer, attacking;
+    private float fireTimer, slowTimer, weakTimer, stunTimer, blindTimer, pursueTimer, attacking, speed, damageTaken;
     private int flockId;
     private EnemyFlock flock;
-    private Vector3 velocity, wanderLocation;
+    private Vector3 wanderLocation, pushVelocity;
     private bool alive;
+    private ParticleSystem fireParticles;
 
     void Awake()
     {
         alive = true;
+        speed = baseSpeed;
+        damageTaken = 1;
     }
 
     void Start()
     {
         healthComp = new Health(startingHP);
+        fireParticles = GetComponentInChildren<ParticleSystem>();
     }
 
     // Update is called once per frame
     void Update()
     {
         //Have the AI figure out what to do
-        DecideBehaviour(Time.deltaTime);
+        Move(DecideBehaviour());
+
+        if (fireTimer > 0)
+        {
+            fireTimer -= Time.deltaTime;
+
+            if (fireTimer <= 0)
+            {
+                fireParticles.Stop();
+                fireTimer = 0;
+            }
+        }
+
+        if (weakTimer > 0)
+        {
+            weakTimer -= Time.deltaTime;
+
+            if (weakTimer <= 0)
+            {
+                weakTimer = 0;
+                damageTaken = 1;
+
+                SkinnedMeshRenderer[] meshes = GetComponentsInChildren<SkinnedMeshRenderer>();
+
+                for (int i = 0; i < meshes.Length; i++)
+                    meshes[i].material = baseMaterial;
+            }
+        }
+
+        if (blindTimer > 0)
+        {
+            blindTimer -= Time.deltaTime;
+        }
 
         if (!healthComp.Update(Time.deltaTime))
             MarkToKill();
-
-        if (onFire > 0)
-        {
-            onFire -= Time.deltaTime;
-
-            if (onFire < 0)
-            {
-                gameObject.GetComponent<MeshRenderer>().material = baseMaterial;
-                onFire = 0;
-            }
-        }
     }
 
-    public void DecideBehaviour(float deltaTime)
+    public Vector3 DecideBehaviour()
     {
+        Vector3 move = new Vector3(0, 0, 0);
+
         RaycastHit objectSeen;
 
         int layerMask = 1 << 8;
@@ -60,14 +87,14 @@ public class Enemy : MonoBehaviour
                 pursueTimer = pursueDuration;
         
         //If they are still pursuing
-        if(pursueTimer > 0)
+        if(pursueTimer > 0 && blindTimer <= 0)
         {
-            pursueTimer -= deltaTime;
+            pursueTimer -= Time.deltaTime;
 
             //Attack the player if close enough and not already attacking
             if(attacking > 0)
             {
-                attacking -= deltaTime;
+                attacking -= Time.deltaTime;
             }
             else
             {
@@ -80,14 +107,16 @@ public class Enemy : MonoBehaviour
                 }
                 else
                 {
-                    PursuePlayer(deltaTime);
+                    move = PursuePlayer();
                 }
             }
         }
         else
         {
-            Flock(deltaTime);
+            move = Flock();
         }
+
+        return move;
     }
 
     public void Init(EnemyFlock flock, int id)
@@ -96,25 +125,57 @@ public class Enemy : MonoBehaviour
         flockId = id;
     }
 
-    public void Damage(int damage)
+    public void Damage(float damage)
     {
-        healthComp.TakeDamage(damage);
+        Debug.Log("Enemy " + flockId + " hit for " + damage * damageTaken + " damage");
+
+        healthComp.TakeDamage(damage * damageTaken);
 
         //Maybe add a hurt sound effect
     }
 
-    public void Ignite()
+    public void Ignite(float dps, float duration)
     {
-        healthComp.AddDOTEffect(SpellHandler.FIRE_DOT_DURATION, SpellHandler.FIRE_DOT_DAMAGE);
+        healthComp.AddDOTEffect(dps, duration);
 
         //Add some fire effects
-        onFire = SpellHandler.FIRE_DOT_DURATION;
-        gameObject.GetComponent<MeshRenderer>().material = onFireMaterial;
+        fireTimer = duration;
+
+        if(fireParticles.isStopped)
+            fireParticles.Play();
     }
 
-    public Vector3 GetVelocity()
+    public void Slow(float speedPenalty, float duration)
     {
-        return velocity;
+        slowTimer = duration;
+        speed = baseSpeed * speedPenalty;
+    }
+
+    public void Push(Vector3 force)
+    {
+        pushVelocity = force;
+    }
+
+    public void Weaken(float damageBoost, float duration)
+    {
+        weakTimer = duration;
+
+        damageTaken = damageBoost;
+
+        SkinnedMeshRenderer[] meshes = GetComponentsInChildren<SkinnedMeshRenderer>();
+
+        for (int i = 0; i < meshes.Length; i++)
+            meshes[i].material = weakenMaterial;
+    }
+
+    public void Stun(float duration)
+    {
+        stunTimer = duration;
+    }
+
+    public void Blind(float duration)
+    {
+        blindTimer = duration;
     }
 
     public void SetWanderLocation(Vector3 location)
@@ -131,7 +192,7 @@ public class Enemy : MonoBehaviour
         attacking = attackCooldown;
     }
 
-    private void PursuePlayer(float deltaTime)
+    private Vector3 PursuePlayer()
     {
         //get velocity of player and move towards a point in front of them
         Vector3 target = flock.player.GetPos() + flock.player.GetVelocity() * pursueAheadDist;
@@ -148,10 +209,10 @@ public class Enemy : MonoBehaviour
         moveDir.y = 0;
         moveDir = moveDir.normalized;
 
-        transform.position += moveDir * speed * deltaTime;
+        return moveDir;
     }
 
-    private void Flock(float deltaTime)
+    private Vector3 Flock()
     {
         //Stay separated from other flock members
         Vector3 separation = Vector3.zero;
@@ -197,9 +258,7 @@ public class Enemy : MonoBehaviour
         //Wander towards a point
         Vector3 wander = (wanderLocation - transform.position).normalized * wanderCoefficient;
 
-        Vector3 move = separation + cohesion + obstacleAvoid + wander;
-
-        transform.position += move * speed * deltaTime;
+        return separation + cohesion + obstacleAvoid + wander;
     }
 
     private Vector3 AvoidObstacles()
@@ -240,5 +299,34 @@ public class Enemy : MonoBehaviour
     public bool GetAlive()
     {
         return alive;
+    }
+
+    private void Move(Vector3 moveDir)
+    {
+        if(stunTimer <= 0)
+            transform.position += (moveDir * speed + pushVelocity) * Time.deltaTime;
+        else
+            transform.position += pushVelocity * Time.deltaTime;
+
+        if (slowTimer > 0)
+        {
+            slowTimer -= Time.deltaTime;
+
+            if (slowTimer < 0)
+                speed = baseSpeed;
+        }
+
+        if(stunTimer > 0)
+        {
+            stunTimer -= Time.deltaTime;
+        }
+
+        if (pushVelocity.magnitude > 0)
+        {
+            if (pushVelocity.magnitude < resistForce)
+                pushVelocity = new Vector3(0, 0, 0);
+            else
+                pushVelocity -= pushVelocity.normalized * resistForce * Time.deltaTime;
+        }
     }
 }

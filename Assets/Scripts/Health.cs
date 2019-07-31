@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class Health
 {
-    private int maxHP, currentHP, shieldHP, dotDamage;
-    private bool alive;
-    private float carryOverDamage, dotTimer;
+    private int maxHP, currentHP, shieldHP;
+    private bool alive, shieldBroke;
+    private float carryOverDamage, dotTimer, dotDamage;
 
     public Health(int startingHP)
     {
@@ -21,7 +21,7 @@ public class Health
     //Returns whether the character is alive or not
     public bool Update(float deltaTime)
     {
-        if(dotTimer > 0)
+        if (dotTimer > 0)
         {
             float totalDamage = carryOverDamage;
 
@@ -39,26 +39,48 @@ public class Health
 
             dotTimer -= deltaTime;
 
-            if(dotTimer <= 0)
+            if (dotTimer <= 0)
             {
                 dotTimer = 0;
                 carryOverDamage = 0;
             }
         }
+        else if (carryOverDamage > 1)
+        {
+            //Take the whole number part in damage
+            TakeDamage((int)carryOverDamage);
+
+            //Save the decimal part for later
+            carryOverDamage = carryOverDamage % 1;
+        }
 
         return alive;
     }
 
-    public bool TakeDamage(int damage)
+    public bool TakeDamage(float damage)
     {
+        int takenDamage = (int)damage;
+
+        carryOverDamage += damage % 1;
+
         if (damage <= shieldHP)
         {
-            shieldHP -= damage;
+            shieldHP -= takenDamage;
+
+            if (shieldHP == 0)
+                shieldBroke = true;
+
             return alive;
         }
         else
         {
-            currentHP -= damage - shieldHP;
+            currentHP -= takenDamage - shieldHP;
+            
+            if(shieldHP != 0)
+            {
+                shieldHP = 0;
+                shieldBroke = true;
+            }
         }
 
         if (currentHP <= 0)
@@ -84,12 +106,23 @@ public class Health
             shieldHP = health;
     }
 
+    public bool ShieldBroke()
+    {
+        if(shieldBroke)
+        {
+            shieldBroke = false;
+            return true;
+        }
+
+        return false;
+    }
+
     public bool Alive()
     {
         return alive;
     }
 
-    public void AddDOTEffect(float duration, int dps)
+    public void AddDOTEffect(float dps, float duration)
     {
         dotTimer = duration;
         dotDamage = dps;

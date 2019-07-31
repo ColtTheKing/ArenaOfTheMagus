@@ -9,11 +9,11 @@ public class GestureManager
 
     private List<Gesture> oneHandGestures, twoHandGestures;
     private Gesture currentGesture;
-    private float sampleTime, lNextSample, rNextSample, accuracyPerSample;
+    private float sampleTime, lNextSample, rNextSample, accuracyPerSample, lengthAccuracyFactor;
     private int samplesPerGesture;
 
     // Start is called before the first frame update
-    public GestureManager(float sampleTime, float accuracyPerSample, int samplesPerGesture, bool clearJSON)
+    public GestureManager(float sampleTime, float accuracyPerSample, float lengthAccuracyFactor, int samplesPerGesture, bool clearJSON)
     {
         oneHandGestures = new List<Gesture>();
         twoHandGestures = new List<Gesture>();
@@ -24,6 +24,9 @@ public class GestureManager
 
         //The default number of samples to convert to when comparing gestures
         this.samplesPerGesture = samplesPerGesture;
+
+        //The amount that gesture length is considered when comparing gestures
+        this.lengthAccuracyFactor = lengthAccuracyFactor;
 
         lNextSample = -1;
         rNextSample = -1;
@@ -69,22 +72,21 @@ public class GestureManager
 
     public void BeginGesture(Player player, bool left)
     {
-
         if (left)
         {
             //If this is the first hand of the gesture
             if (rNextSample == -1)
             {
                 //Create a new left gesture
-                currentGesture = new Gesture(player.playerHead.transform.eulerAngles.y, Gesture.GestureHand.LEFT);
+                currentGesture = new Gesture(Gesture.GestureHand.LEFT);
             }
             else //If the gesture has already been started by the other hand
             {
                 currentGesture.AddHand(Gesture.GestureHand.LEFT);
             }
 
-            //Add the first node
-            currentGesture.AddNode(player.leftHand.transform.position - player.playerHead.transform.position, Gesture.GestureHand.LEFT);
+            //Add the starting node
+            currentGesture.AddStartPoint(Gesture.GestureHand.LEFT, player.leftHand.transform.position - player.playerHead.transform.position);
 
             //Set time until the next sample should be recorded
             lNextSample = sampleTime;
@@ -95,15 +97,15 @@ public class GestureManager
             if (lNextSample == -1)
             {
                 //Create a new left gesture
-                currentGesture = new Gesture(player.playerHead.transform.eulerAngles.y, Gesture.GestureHand.RIGHT);
+                currentGesture = new Gesture(Gesture.GestureHand.RIGHT);
             }
             else //If the gesture has already been started by the other hand
             {
                 currentGesture.AddHand(Gesture.GestureHand.RIGHT);
             }
 
-            //Add the first node
-            currentGesture.AddNode(player.rightHand.transform.position - player.playerHead.transform.position, Gesture.GestureHand.RIGHT);
+            //Add the starting node
+            currentGesture.AddStartPoint(Gesture.GestureHand.RIGHT, player.rightHand.transform.position - player.playerHead.transform.position);
 
             //Set time until the next sample should be recorded
             rNextSample = sampleTime;
@@ -183,15 +185,6 @@ public class GestureManager
         string readText = System.IO.File.ReadAllText(GESTURE_PATH);
         List<List<Gesture>> gestures = JsonConvert.DeserializeObject<List<List<Gesture>>>(readText);
 
-        //If there isn't anything in the file or something is wrong it's probably best to just clear the json
-        //if(gestures.Count < 2)
-        //{
-        //    ClearJSON();
-
-        //    readText = System.IO.File.ReadAllText(GESTURE_PATH);
-        //    gestures = JsonConvert.DeserializeObject<List<List<Gesture>>>(readText);
-        //}
-
         oneHandGestures = gestures[0];
         twoHandGestures = gestures[1];
 
@@ -254,6 +247,12 @@ public class GestureManager
         float matchDiff = 0;
         
         Gesture.GestureHand hands = inputGesture.GetCurHands();
+
+        if((hands == Gesture.GestureHand.BOTH && (inputGesture.NumNodes(Gesture.GestureHand.LEFT) == 1 || inputGesture.NumNodes(Gesture.GestureHand.RIGHT) == 1))
+            || (hands != Gesture.GestureHand.BOTH && inputGesture.NumNodes(hands) == 1))
+        {
+            return bestMatch;
+        }
         
         if (hands == Gesture.GestureHand.BOTH)
         {
@@ -263,8 +262,8 @@ public class GestureManager
             
             foreach (Gesture g in twoHandGestures)
             {
-                float diff = g.AverageDifference(inputGesture, Gesture.GestureHand.LEFT)
-                    + g.AverageDifference(inputGesture, Gesture.GestureHand.RIGHT) / 2;
+                float diff = g.AverageDifference(inputGesture, lengthAccuracyFactor, Gesture.GestureHand.LEFT)
+                    + g.AverageDifference(inputGesture, lengthAccuracyFactor, Gesture.GestureHand.RIGHT) / 2;
                 
                 Debug.Log("diff = " + diff);
                 
@@ -283,7 +282,7 @@ public class GestureManager
             
             foreach (Gesture g in oneHandGestures)
             {
-                float diff = g.AverageDifference(inputGesture, hands);
+                float diff = g.AverageDifference(inputGesture, lengthAccuracyFactor, hands);
                 
                 Debug.Log("diff = " + diff);
 

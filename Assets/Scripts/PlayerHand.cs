@@ -12,6 +12,8 @@ public class PlayerHand : MonoBehaviour
     //Temporary visualization of the sample
     public GameObject sample;
 
+    public Vector3 palmOffset;
+
     private Animator animator;
     private float sampleTime;
     private bool grabbing;
@@ -73,5 +75,10 @@ public class PlayerHand : MonoBehaviour
 
         GameObject instNode = Instantiate(sample);
         instNode.transform.position = transform.position;
+    }
+
+    public Vector3 CenterPos()
+    {
+        return transform.position + palmOffset;
     }
 }

@@ -24,8 +24,7 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!roundManager.GameOngoing())
-            EndGame();
+
     }
 
     public void PressMenuButton(int buttonId)

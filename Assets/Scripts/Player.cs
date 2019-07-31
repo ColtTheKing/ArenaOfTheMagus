@@ -19,13 +19,15 @@ public class Player : MonoBehaviour
     //Temporary visualization of the gesture
     public GameObject sample;
 
-    public float moveSpeed, runMultiplier, sampleTime, accuracyPerSample;
+    public float moveSpeed, runMultiplier, sampleTime, accuracyPerSample, lengthAccuracyFactor;
 
     public int samplesPerGesture, startingHP;
 
-    public bool showSamples, clearJSON;
+    public bool showSamples, clearJSON, allowRecording;
 
     public SpellHandler.SpellType recordedType;
+
+    public Material baseMaterial, rockMaterial;
 
     private GestureManager gestureManager;
     private SpellHandler spellHandler;
@@ -39,7 +41,7 @@ public class Player : MonoBehaviour
     {
         leftHand = GetComponentInChildren<PlayerHand>();
 
-        gestureManager = new GestureManager(sampleTime, accuracyPerSample, samplesPerGesture, clearJSON);
+        gestureManager = new GestureManager(sampleTime, accuracyPerSample, lengthAccuracyFactor, samplesPerGesture, clearJSON);
 
         spellHandler = GetComponent<SpellHandler>();
 
@@ -92,18 +94,24 @@ public class Player : MonoBehaviour
             {
                 rightHand.ToggleGrabbing();
                 spellHandler.CastSpell(gestureManager.EndGesture(this), gestureManager.CurrentHand());
-                Application.Quit();
             }
         }
 
         gestureManager.Update(this, Time.deltaTime);
 
         //Deal with saving gestures WILL BE REMOVED LATER
-        if (recordAction.GetStateDown(SteamVR_Input_Sources.LeftHand) || recordAction.GetStateDown(SteamVR_Input_Sources.RightHand))
+        if (allowRecording && (recordAction.GetStateDown(SteamVR_Input_Sources.LeftHand) || recordAction.GetStateDown(SteamVR_Input_Sources.RightHand)))
             gestureManager.SaveLastGesture(this, recordedType);
 
         //Deal with player movement
         CalcMovement();
+
+        //Remove the shield material if the shield is gone
+        if(healthComp.ShieldBroke())
+        {
+            leftHand.GetComponentInChildren<SkinnedMeshRenderer>().material = baseMaterial;
+            rightHand.GetComponentInChildren<SkinnedMeshRenderer>().material = baseMaterial;
+        }
     }
 
     private void UpdateMenu()
@@ -256,7 +264,7 @@ public class Player : MonoBehaviour
     public void Damage(int damage)
     {
         //maybe add damaged sound effect
-        Debug.Log("ouch");
+        Debug.Log("Player hit for " + damage + " damage");
 
         //If damage killed the player
         if (!healthComp.TakeDamage(damage))
@@ -266,9 +274,11 @@ public class Player : MonoBehaviour
         }
     }
 
-    public void ResetHealth()
+    public void ResetStuff()
     {
         healthComp = new Health(startingHP);
+        leftHand.GetComponentInChildren<SkinnedMeshRenderer>().material = baseMaterial;
+        rightHand.GetComponentInChildren<SkinnedMeshRenderer>().material = baseMaterial;
     }
 
     public void CreateSample(Vector3 pos)
@@ -299,5 +309,13 @@ public class Player : MonoBehaviour
     public Vector3 GetPos()
     {
         return playerHead.transform.position;
+    }
+
+    public void AddShield(int shieldHp, Material shieldMaterial)
+    {
+        healthComp.Shield(shieldHp);
+
+        leftHand.GetComponentInChildren<SkinnedMeshRenderer>().material = shieldMaterial;
+        rightHand.GetComponentInChildren<SkinnedMeshRenderer>().material = shieldMaterial;
     }
 }
