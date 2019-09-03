@@ -19,13 +19,17 @@ public class Player : MonoBehaviour
     //Temporary visualization of the gesture
     public GameObject sample;
 
-    public float moveSpeed, runMultiplier, sampleTime, accuracyPerSample;
+    public float moveSpeed, runMultiplier, sampleTime, accuracyPerSample, lengthAccuracyFactor;
 
-    public int samplesPerGesture, startingHP;
+    public int samplesPerGesture, startingHP, numCalibrations;
 
-    public bool showSamples, clearJSON;
+    public bool showSamples, clearJSON, allowRecording, alwaysSprint;
 
     public SpellHandler.SpellType recordedType;
+
+    public Material baseMaterial, rockMaterial;
+
+    public AudioClip damageSound;
 
     private GestureManager gestureManager;
     private SpellHandler spellHandler;
@@ -33,21 +37,29 @@ public class Player : MonoBehaviour
     private Vector3 velocity;
     private GameManager gameManager;
     private LineRenderer menuPointer;
-    private bool leftHandPointing;
+    private AudioSource audioSource;
+    private bool leftHandPointing, pointerEnabled;
+    private CollisionChecker collisionChecker;
+
+    void Awake()
+    {
+        gestureManager = new GestureManager(sampleTime, accuracyPerSample, lengthAccuracyFactor, samplesPerGesture, clearJSON, numCalibrations);
+    }
 
     void Start()
     {
         leftHand = GetComponentInChildren<PlayerHand>();
-
-        gestureManager = new GestureManager(sampleTime, accuracyPerSample, samplesPerGesture, clearJSON);
-
         spellHandler = GetComponent<SpellHandler>();
-
         gameManager = GetComponent<GameManager>();
+        menuPointer = GetComponent<LineRenderer>();
+        audioSource = GetComponent<AudioSource>();
+        collisionChecker = GetComponent<CollisionChecker>();
 
         healthComp = new Health(startingHP);
 
-        menuPointer = GetComponent<LineRenderer>();
+        audioSource.clip = damageSound;
+
+        pointerEnabled = true;
     }
 
     void Update()
@@ -66,7 +78,7 @@ public class Player : MonoBehaviour
             if (!leftHand.GetGrabbing())
             {
                 leftHand.ToggleGrabbing();
-                gestureManager.BeginGesture(this, true);
+                gestureManager.BeginGesture(this, true, true);
             }
         }
         else
@@ -74,7 +86,7 @@ public class Player : MonoBehaviour
             if (leftHand.GetGrabbing())
             {
                 leftHand.ToggleGrabbing();
-                spellHandler.CastSpell(gestureManager.EndGesture(this), gestureManager.CurrentHand());
+                spellHandler.CastSpell(gestureManager.EndGesture(), gestureManager.CurrentHand());
             }
         }
 
@@ -83,7 +95,7 @@ public class Player : MonoBehaviour
             if (!rightHand.GetGrabbing())
             {
                 rightHand.ToggleGrabbing();
-                gestureManager.BeginGesture(this, false);
+                gestureManager.BeginGesture(this, false, true);
             }
         }
         else
@@ -91,19 +103,24 @@ public class Player : MonoBehaviour
             if (rightHand.GetGrabbing())
             {
                 rightHand.ToggleGrabbing();
-                spellHandler.CastSpell(gestureManager.EndGesture(this), gestureManager.CurrentHand());
-                Application.Quit();
+                spellHandler.CastSpell(gestureManager.EndGesture(), gestureManager.CurrentHand());
             }
         }
 
-        gestureManager.Update(this, Time.deltaTime);
-
-        //Deal with saving gestures WILL BE REMOVED LATER
-        if (recordAction.GetStateDown(SteamVR_Input_Sources.LeftHand) || recordAction.GetStateDown(SteamVR_Input_Sources.RightHand))
-            gestureManager.SaveLastGesture(this, recordedType);
+        gestureManager.Update(this, Time.deltaTime, true);
 
         //Deal with player movement
         CalcMovement();
+
+        //Remove the shield material if the shield is gone
+        if(healthComp.ShieldBroke())
+        {
+            leftHand.GetComponentInChildren<SkinnedMeshRenderer>().material = baseMaterial;
+            rightHand.GetComponentInChildren<SkinnedMeshRenderer>().material = baseMaterial;
+        }
+
+        leftHand.SetGems(healthComp.GetHealth() / (float)startingHP);
+        rightHand.SetGems(healthComp.GetHealth() / (float)startingHP);
     }
 
     private void UpdateMenu()
@@ -116,8 +133,9 @@ public class Player : MonoBehaviour
             if (!leftHand.GetGrabbing())
             {
                 leftHand.ToggleGrabbing();
+                gestureManager.BeginGesture(this, true, false);
 
-                if(leftHandPointing)
+                if (leftHandPointing)
                     click = true;
                 else
                     leftHandPointing = true;
@@ -128,6 +146,7 @@ public class Player : MonoBehaviour
             if (leftHand.GetGrabbing())
             {
                 leftHand.ToggleGrabbing();
+                gestureManager.EndCalibratedGesture();
             }
         }
 
@@ -136,8 +155,9 @@ public class Player : MonoBehaviour
             if (!rightHand.GetGrabbing())
             {
                 rightHand.ToggleGrabbing();
+                gestureManager.BeginGesture(this, false, false);
 
-                if(!leftHandPointing)
+                if (!leftHandPointing)
                     click = true;
                 else
                     leftHandPointing = false;
@@ -148,16 +168,23 @@ public class Player : MonoBehaviour
             if (rightHand.GetGrabbing())
             {
                 rightHand.ToggleGrabbing();
+                gestureManager.EndCalibratedGesture();
             }
         }
 
-        if (leftHandPointing)
+        gestureManager.Update(this, Time.deltaTime, false);
+
+        if (leftHandPointing && pointerEnabled)
         {
             PointAtMenu(leftHand, click);
         }
-        else
+        else if (pointerEnabled)
         {
             PointAtMenu(rightHand, click);
+        }
+        else
+        {
+            menuPointer.enabled = false;
         }
     }
 
@@ -165,7 +192,7 @@ public class Player : MonoBehaviour
     {
         RaycastHit hit;
 
-        Physics.Raycast(hand.transform.position, hand.transform.forward, out hit, pointerLength);
+        Physics.Raycast(hand.CenterPos(), hand.transform.forward, out hit, pointerLength);
 
         //Display the menu pointer
         Vector3 pointerEnd;
@@ -173,9 +200,10 @@ public class Player : MonoBehaviour
         if (hit.collider != null)
             pointerEnd = hit.point;
         else
-            pointerEnd = hand.transform.position + (hand.transform.forward * pointerLength);
+            pointerEnd = hand.CenterPos() + (hand.transform.forward * pointerLength);
 
-        menuPointer.SetPosition(0, hand.transform.position);
+        menuPointer.enabled = true;
+        menuPointer.SetPosition(0, hand.CenterPos());
         menuPointer.SetPosition(1, pointerEnd);
 
         //If the player pressed the trigger on a button activate the button
@@ -191,15 +219,18 @@ public class Player : MonoBehaviour
     private void CalcMovement()
     {
         Vector2 trackPos = moveAction.GetAxis(SteamVR_Input_Sources.RightHand);
+        bool left = false;
+
+        if (trackPos == Vector2.zero)
+        {
+            trackPos = moveAction.GetAxis(SteamVR_Input_Sources.LeftHand);
+            left = true;
+        }
+
         float playerRot = playerHead.transform.eulerAngles.y * Mathf.Deg2Rad; //in radians
 
         if (trackPos.x == 0.0f && trackPos.y == 0.0f)
             return;
-
-        float runMult = 1.0f;
-        
-        if (runAction.GetState(SteamVR_Input_Sources.RightHand))
-            runMult = runMultiplier;
 
         float h, trackRot, theta, xMove, yMove;
 
@@ -248,15 +279,13 @@ public class Player : MonoBehaviour
         xMove *= h * Mathf.Sin(theta);
         yMove *= h * Mathf.Cos(theta);
 
-        velocity = new Vector3(xMove, 0, yMove).normalized * moveSpeed * runMult;
-
-        transform.position = transform.position + (velocity * Time.deltaTime);
+        Move(new Vector3(xMove, 0, yMove).normalized, left);
     }
 
-    public void Damage(int damage)
+    public void Damage(float damage)
     {
         //maybe add damaged sound effect
-        Debug.Log("ouch");
+        audioSource.Play();
 
         //If damage killed the player
         if (!healthComp.TakeDamage(damage))
@@ -264,11 +293,21 @@ public class Player : MonoBehaviour
             Debug.Log("player died");
             gameManager.EndGame();
         }
+
+        leftHand.SetGems(healthComp.GetHealth() / (float)startingHP);
     }
 
-    public void ResetHealth()
+    public void ResetStuff()
     {
         healthComp = new Health(startingHP);
+        leftHand.GetComponentInChildren<SkinnedMeshRenderer>().material = baseMaterial;
+        rightHand.GetComponentInChildren<SkinnedMeshRenderer>().material = baseMaterial;
+
+        leftHand.RemoveElement();
+        rightHand.RemoveElement();
+
+        leftHand.ResetGems();
+        rightHand.ResetGems();
     }
 
     public void CreateSample(Vector3 pos)
@@ -289,6 +328,9 @@ public class Player : MonoBehaviour
     {
         spellHandler.elementLeft = leftElement;
         spellHandler.elementRight = rightElement;
+
+        leftHand.SetElement(leftElement);
+        rightHand.SetElement(rightElement);
     }
 
     public void ToggleMenuPointer(bool enabled)
@@ -299,5 +341,37 @@ public class Player : MonoBehaviour
     public Vector3 GetPos()
     {
         return playerHead.transform.position;
+    }
+
+    public void AddShield(int shieldHp, Material shieldMaterial)
+    {
+        healthComp.Shield(shieldHp);
+
+        leftHand.GetComponentInChildren<SkinnedMeshRenderer>().material = shieldMaterial;
+        rightHand.GetComponentInChildren<SkinnedMeshRenderer>().material = shieldMaterial;
+    }
+
+    public GestureManager GetGestureManager()
+    {
+        return gestureManager;
+    }
+
+    public void SetPointerEnabled(bool pointerEnabled)
+    {
+        this.pointerEnabled = pointerEnabled;
+    }
+
+    private void Move(Vector3 moveDir, bool left)
+    {
+        float runMult = 1.0f;
+
+        if (alwaysSprint || (!left && runAction.GetState(SteamVR_Input_Sources.RightHand)
+            || left && runAction.GetState(SteamVR_Input_Sources.LeftHand)))
+            runMult = runMultiplier;
+
+        velocity = moveDir * moveSpeed * runMult;
+
+        if(!collisionChecker.IsColliding(transform.position + velocity * Time.deltaTime, true))
+            transform.position += velocity * Time.deltaTime;
     }
 }

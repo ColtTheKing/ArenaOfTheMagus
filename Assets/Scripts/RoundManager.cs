@@ -6,26 +6,36 @@ public class RoundManager : MonoBehaviour
 {
     public Enemy enemy;
     public List<Vector3> enemyFlockOffsets;
-    public Vector3 flockPosition; //will be generated later
-    public List<int> flocksPerRound;
-    public float timeBetweenSpawns, wanderFrequency, wanderRadius;
+    public List<Vector3> flockSpawns;
+    public List<int> increaseFlockRounds;
+    public float timeBetweenSpawns, wanderFrequency, wanderRadius, arenaRadius, spawnDistMin, spawnDistMax, enemyHpPerRound, enemyDmgPerRound;
     public bool spawnEnemies;
-    public List<Obstacle> obstacles;
 
     private bool inGame;
-    private int currentRound, flocksKilled;
+    private int currentRound, flocksKilledThisRound, flocksPerRound;
     private float spawnTimer;
     private List<EnemyFlock> flocks;
     private Player player;
+    private GameManager gameManager;
+    private CollisionChecker collisionChecker;
+    private List<bool> spawnsOccupied;
 
     void Start()
     {
-        currentRound = 0;
+        currentRound = 1;
         spawnTimer = 0;
-        flocksKilled = 0;
+        flocksKilledThisRound = 0;
+        flocksPerRound = 1;
 
         flocks = new List<EnemyFlock>();
         player = GetComponent<Player>();
+        gameManager = GetComponent<GameManager>();
+        collisionChecker = GetComponent<CollisionChecker>();
+
+        spawnsOccupied = new List<bool>();
+
+        for (int i = 0; i < flockSpawns.Count; i++)
+            spawnsOccupied.Add(false);
     }
 
     // Update is called once per frame
@@ -42,60 +52,44 @@ public class RoundManager : MonoBehaviour
             if (flocks[i].flockMembers.Count == 0)
             {
                 flocks.RemoveAt(i--);
-                flocksKilled++;
+                flocksKilledThisRound++;
             }
         }
 
         //If all the flocks are dead start the next round
-        if (flocksKilled == flocksPerRound[currentRound])
+        if (flocksKilledThisRound == flocksPerRound)
             NextRound();
 
         //When time has passed make a flock
-        if (spawnTimer >= timeBetweenSpawns && flocks.Count < flocksPerRound[currentRound])
-        {
-            List<Enemy> enemies = new List<Enemy>();
-
-            for (int i = 0; i < enemyFlockOffsets.Count; i++)
-            {
-                Enemy e = Instantiate(enemy);
-
-                //Flock starting position currently hardcoded, will be generated later
-                e.gameObject.transform.eulerAngles = new Vector3(0, -90, 0);
-                e.gameObject.transform.position = flockPosition + enemyFlockOffsets[i];
-
-                enemies.Add(e);
-            }
-
-            flocks.Add(new EnemyFlock(enemies, flockPosition, wanderRadius, wanderFrequency, player, obstacles));
-
-            spawnTimer = 0;
-        }
+        if (spawnTimer >= timeBetweenSpawns && flocks.Count < flocksPerRound)
+            SpawnFlock();
 
         //Do flock things
-        for(int i = 0; i < flocks.Count; i++)
+        for (int i = 0; i < flocks.Count; i++)
         {
             //Handle this flock
             flocks[i].Update(Time.deltaTime);
         }
     }
 
-    public void StartRounds()
+    public void StartRounds(SpellHandler.SpellElement leftElement, SpellHandler.SpellElement rightElement)
     {
         inGame = true;
         player.ToggleMenuPointer(false);
+        player.SetElements(leftElement, rightElement);
     }
 
     public void NextRound()
     {
-        if (++currentRound >= flocksPerRound.Count)
-        {
-            EndRounds();
-        }
-        else
-        {
-            spawnTimer = 0;
-            flocksKilled = 0;
-        }
+        spawnTimer = 0;
+        flocksKilledThisRound = 0;
+
+        //Clear the spawns
+        for (int i = 0; i < spawnsOccupied.Count; i++)
+            spawnsOccupied[i] = false;
+
+        if (++currentRound == increaseFlockRounds[flocksPerRound - 1])
+            flocksPerRound++;
     }
 
     public void EndRounds()
@@ -103,19 +97,65 @@ public class RoundManager : MonoBehaviour
         foreach (EnemyFlock f in flocks)
             f.KillFlock();
 
+        //Clear the spawns
+        for (int i = 0; i < spawnsOccupied.Count; i++)
+            spawnsOccupied[i] = false;
+
         flocks.Clear();
 
-        currentRound = 0;
+        currentRound = 1;
         spawnTimer = 0;
 
         inGame = false;
         player.ToggleMenuPointer(true);
         player.transform.position = new Vector3(0, 0, 0);
-        player.ResetHealth();
+        player.ResetStuff();
+
+        gameManager.EndGame();
     }
 
     public bool GameOngoing()
     {
         return inGame;
+    }
+
+    private void SpawnFlock()
+    {
+        Vector3 flockPosition;
+
+        //Place the flock in an open spawn position
+        int rand = Random.Range(0, flockSpawns.Count);
+
+        while(spawnsOccupied[rand])
+        {
+            if (++rand == flockSpawns.Count)
+                rand = 0;
+        }
+
+        flockPosition = flockSpawns[rand];
+
+        //Mark that spawn as occupied
+        spawnsOccupied[rand] = true;
+
+        //Create the flock based on that position
+        List<Enemy> enemies = new List<Enemy>();
+
+        for (int i = 0; i < enemyFlockOffsets.Count; i++)
+        {
+            Enemy e = Instantiate(enemy);
+
+            e.transform.position += flockPosition + enemyFlockOffsets[i];
+
+            enemies.Add(e);
+        }
+
+        flocks.Add(new EnemyFlock(enemies, wanderRadius, arenaRadius, wanderFrequency, player, enemyHpPerRound * currentRound, enemyDmgPerRound * currentRound, collisionChecker));
+
+        spawnTimer = 0;
+    }
+
+    public Player GetPlayer()
+    {
+        return player;
     }
 }

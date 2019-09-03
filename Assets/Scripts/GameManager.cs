@@ -7,16 +7,15 @@ public class GameManager : MonoBehaviour
     public GameObject menuObject;
     public MainMenu mainMenu;
     public GameObject[] menuWalls;
+    public GameObject arena;
 
     private RoundManager roundManager;
-    private SpellHandler spellHandler;
     private bool gameStarted;
 
     // Start is called before the first frame update
     void Start()
     {
         roundManager = GetComponent<RoundManager>();
-        spellHandler = GetComponent<SpellHandler>();
 
         mainMenu.Init(this);
     }
@@ -24,8 +23,7 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!roundManager.GameOngoing())
-            EndGame();
+
     }
 
     public void PressMenuButton(int buttonId)
@@ -43,12 +41,11 @@ public class GameManager : MonoBehaviour
         foreach (GameObject g in menuWalls)
             g.SetActive(false);
 
+        arena.SetActive(true);
+
         gameStarted = true;
 
-        spellHandler.elementLeft = leftElement;
-        spellHandler.elementRight = rightElement;
-
-        roundManager.StartRounds();
+        roundManager.StartRounds(leftElement, rightElement);
     }
 
     public void EndGame()
@@ -60,5 +57,12 @@ public class GameManager : MonoBehaviour
 
         foreach (GameObject g in menuWalls)
             g.SetActive(true);
+
+        arena.SetActive(false);
+    }
+
+    public Player GetPlayer()
+    {
+        return roundManager.GetPlayer();
     }
 }

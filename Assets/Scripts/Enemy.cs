@@ -4,52 +4,90 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
-    public int startingHP, attackDamage;
-    public float speed, attackCooldown, attackRange;
+    public int startingHP;
+    public float attackDamage, baseSpeed, attackCooldown, attackRange, resistForce;
     //AI Movement Variables
     public float pursueDuration, pursueAheadDist, pursueRange, avoidDist, separationRadius, pursueCoefficient, avoidCoefficient, separationCoefficient, cohesionCoefficient, wanderCoefficient;
-    public Material baseMaterial, onFireMaterial;
+    public Material baseMaterial, weakenMaterial;
+    public List<AudioClip> damageSounds, idleSounds, attackSounds;
 
     private Health healthComp;
-    private float onFire, pursueTimer, attacking;
+    private float fireTimer, slowTimer, weakTimer, stunTimer, blindTimer, pursueTimer, attacking, speed, damageTaken;
     private int flockId;
     private EnemyFlock flock;
-    private Vector3 velocity, wanderLocation;
+    private Vector3 wanderLocation, pushVelocity;
     private bool alive;
+    private ParticleSystem fireParticles;
+    private AudioSource audioSource;
+    private CollisionChecker collisionChecker;
 
     void Awake()
     {
         alive = true;
+        speed = baseSpeed;
+        damageTaken = 1;
     }
 
     void Start()
     {
         healthComp = new Health(startingHP);
+        fireParticles = GetComponentInChildren<ParticleSystem>();
+        audioSource = GetComponent<AudioSource>();
     }
 
     // Update is called once per frame
     void Update()
     {
+        int rand = Random.Range(0, 1000);
+
+        if (rand == 0)
+            PlayIdleSound();
+
         //Have the AI figure out what to do
-        DecideBehaviour(Time.deltaTime);
+        Move(DecideBehaviour());
+
+        transform.position -= new Vector3(0, transform.position.y, 0);
+
+        if (fireTimer > 0)
+        {
+            fireTimer -= Time.deltaTime;
+
+            if (fireTimer <= 0)
+            {
+                fireParticles.Stop();
+                fireTimer = 0;
+            }
+        }
+
+        if (weakTimer > 0)
+        {
+            weakTimer -= Time.deltaTime;
+
+            if (weakTimer <= 0)
+            {
+                weakTimer = 0;
+                damageTaken = 1;
+
+                SkinnedMeshRenderer[] meshes = GetComponentsInChildren<SkinnedMeshRenderer>();
+
+                for (int i = 0; i < meshes.Length; i++)
+                    meshes[i].material = baseMaterial;
+            }
+        }
+
+        if (blindTimer > 0)
+        {
+            blindTimer -= Time.deltaTime;
+        }
 
         if (!healthComp.Update(Time.deltaTime))
             MarkToKill();
-
-        if (onFire > 0)
-        {
-            onFire -= Time.deltaTime;
-
-            if (onFire < 0)
-            {
-                gameObject.GetComponent<MeshRenderer>().material = baseMaterial;
-                onFire = 0;
-            }
-        }
     }
 
-    public void DecideBehaviour(float deltaTime)
+    public Vector3 DecideBehaviour()
     {
+        Vector3 move = Vector3.zero;
+
         RaycastHit objectSeen;
 
         int layerMask = 1 << 8;
@@ -60,14 +98,14 @@ public class Enemy : MonoBehaviour
                 pursueTimer = pursueDuration;
         
         //If they are still pursuing
-        if(pursueTimer > 0)
+        if(pursueTimer > 0 && blindTimer <= 0)
         {
-            pursueTimer -= deltaTime;
+            pursueTimer -= Time.deltaTime;
 
             //Attack the player if close enough and not already attacking
             if(attacking > 0)
             {
-                attacking -= deltaTime;
+                attacking -= Time.deltaTime;
             }
             else
             {
@@ -80,46 +118,89 @@ public class Enemy : MonoBehaviour
                 }
                 else
                 {
-                    PursuePlayer(deltaTime);
+                    move = PursuePlayer();
                 }
             }
         }
         else
         {
-            Flock(deltaTime);
+            move = Flock();
         }
+
+        return move;
     }
 
-    public void Init(EnemyFlock flock, int id)
+    public void Init(EnemyFlock flock, int id, float healthBonus, float damageBonus, CollisionChecker collisionChecker)
     {
         this.flock = flock;
         flockId = id;
+
+        this.collisionChecker = collisionChecker;
+
+        attackDamage += damageBonus;
+
+        healthComp = new Health(startingHP + (int)healthBonus);
     }
 
-    public void Damage(int damage)
+    public void Damage(float damage)
     {
-        healthComp.TakeDamage(damage);
+        PlayDamageSound();
 
-        //Maybe add a hurt sound effect
+        healthComp.TakeDamage(damage * damageTaken);
     }
 
-    public void Ignite()
+    public void Ignite(float dps, float duration)
     {
-        healthComp.AddDOTEffect(SpellHandler.FIRE_DOT_DURATION, SpellHandler.FIRE_DOT_DAMAGE);
+        healthComp.AddDOTEffect(dps, duration);
 
         //Add some fire effects
-        onFire = SpellHandler.FIRE_DOT_DURATION;
-        gameObject.GetComponent<MeshRenderer>().material = onFireMaterial;
+        fireTimer = duration;
+
+        if(fireParticles.isStopped)
+            fireParticles.Play();
     }
 
-    public Vector3 GetVelocity()
+    public void Slow(float speedPenalty, float duration)
     {
-        return velocity;
+        slowTimer = duration;
+        speed = baseSpeed * speedPenalty;
+    }
+
+    public void Push(Vector3 force)
+    {
+        pushVelocity = force;
+    }
+
+    public void Weaken(float damageBoost, float duration)
+    {
+        weakTimer = duration;
+
+        damageTaken = damageBoost;
+
+        SkinnedMeshRenderer[] meshes = GetComponentsInChildren<SkinnedMeshRenderer>();
+
+        for (int i = 0; i < meshes.Length; i++)
+            meshes[i].material = weakenMaterial;
+    }
+
+    public void Stun(float duration)
+    {
+        stunTimer = duration;
+    }
+
+    public void Blind(float duration)
+    {
+        blindTimer = duration;
     }
 
     public void SetWanderLocation(Vector3 location)
     {
         wanderLocation = location;
+    }
+    
+    public Vector3 GetWanderLocation()
+    {
+        return wanderLocation;
     }
 
     private void AttackPlayer()
@@ -127,54 +208,39 @@ public class Enemy : MonoBehaviour
         //do attack
         flock.player.Damage(attackDamage);
 
+        PlayAttackSound();
+
         //set the attack cooldown
         attacking = attackCooldown;
     }
 
-    private void PursuePlayer(float deltaTime)
+    private Vector3 PursuePlayer()
     {
         //get velocity of player and move towards a point in front of them
         Vector3 target = flock.player.GetPos() + flock.player.GetVelocity() * pursueAheadDist;
         target.y = 0;
 
         //find the direction towards that point
-        Vector3 playerPursue = (target - transform.position).normalized;
+        Vector3 playerPursue = (target - transform.position).normalized * pursueCoefficient;
 
         //also take into account obstacle avoidance
-        Vector3 obstacleAvoid = AvoidObstacles();
+        Vector3 obstacleAvoid = AvoidObstacles() * avoidCoefficient;
+
+        //also stay separated from other flock members
+        Vector3 separation = Separate() * separationCoefficient;
 
         //Make the pursue be a unit vector
-        Vector3 moveDir = playerPursue * pursueCoefficient + obstacleAvoid * avoidCoefficient;
+        Vector3 moveDir = playerPursue + obstacleAvoid + separation;
         moveDir.y = 0;
         moveDir = moveDir.normalized;
 
-        transform.position += moveDir * speed * deltaTime;
+        return moveDir;
     }
 
-    private void Flock(float deltaTime)
+    private Vector3 Flock()
     {
         //Stay separated from other flock members
-        Vector3 separation = Vector3.zero;
-
-        for(int i = 0; i < flock.flockMembers.Count; i++)
-        {
-            if (i == flockId)
-                continue;
-
-            Vector3 fromFlockMember = transform.position - flock.flockMembers[i].transform.position;
-
-            if (fromFlockMember.magnitude < separationRadius)
-            {
-                //Make force decrease from 1 to zero from the current flock member to the separation radius
-                float separationForce = Mathf.Sqrt(separationRadius - fromFlockMember.magnitude);
-                Vector3 hi = fromFlockMember.normalized * separationForce;
-                separation += hi;
-            }
-        }
-
-        //Keeps the value reasonable while allowing it to be smaller than 1
-        if (separation.magnitude > 1)
-            separation = separation.normalized;
+        Vector3 separation = Separate();
 
         separation *= separationCoefficient;
 
@@ -197,19 +263,20 @@ public class Enemy : MonoBehaviour
         //Wander towards a point
         Vector3 wander = (wanderLocation - transform.position).normalized * wanderCoefficient;
 
-        Vector3 move = separation + cohesion + obstacleAvoid + wander;
-
-        transform.position += move * speed * deltaTime;
+        return separation + cohesion + obstacleAvoid + wander;
     }
 
     private Vector3 AvoidObstacles()
     {
         Vector3 avoid = Vector3.zero;
 
-        for (int i = 0; i < flock.obstacles.Count; i++)
+        for (int i = 0; i < collisionChecker.obstacles.Count; i++)
         {
-            Vector3 fromObstacle = transform.position - flock.obstacles[i].transform.position;
-            float avoidRadius = flock.obstacles[i].radius + avoidDist;
+            if (collisionChecker.obstacles[i].ignoreAvoid)
+                continue;
+
+            Vector3 fromObstacle = transform.position - collisionChecker.obstacles[i].transform.position;
+            float avoidRadius = collisionChecker.obstacles[i].radius + avoidDist;
 
             if (fromObstacle.magnitude < avoidRadius)
             {
@@ -217,6 +284,8 @@ public class Enemy : MonoBehaviour
                 float avoidForce = (avoidRadius - fromObstacle.magnitude) / avoidRadius;
 
                 avoid += fromObstacle.normalized * avoidForce;
+
+                Weaken(1, 1);
             }
         }
 
@@ -225,6 +294,34 @@ public class Enemy : MonoBehaviour
             avoid = avoid.normalized;
 
         return avoid;
+    }
+
+    private Vector3 Separate()
+    {
+        //Stay separated from other flock members
+        Vector3 separation = Vector3.zero;
+
+        for (int i = 0; i < flock.flockMembers.Count; i++)
+        {
+            if (i == flockId)
+                continue;
+
+            Vector3 fromFlockMember = transform.position - flock.flockMembers[i].transform.position;
+
+            if (fromFlockMember.magnitude < separationRadius)
+            {
+                //Make force decrease from 1 to zero from the current flock member to the separation radius
+                float separationForce = Mathf.Sqrt(separationRadius - fromFlockMember.magnitude);
+                Vector3 hi = fromFlockMember.normalized * separationForce;
+                separation += hi;
+            }
+        }
+
+        //Keeps the value reasonable while allowing it to be smaller than 1
+        if (separation.magnitude > 1)
+            separation = separation.normalized;
+
+        return separation;
     }
 
     public void MarkToKill()
@@ -240,5 +337,84 @@ public class Enemy : MonoBehaviour
     public bool GetAlive()
     {
         return alive;
+    }
+
+    private void Move(Vector3 moveDir)
+    {
+        if (stunTimer <= 0)
+        {
+            if (!collisionChecker.IsColliding(transform.position + (moveDir * speed + pushVelocity) * Time.deltaTime, false))
+                transform.position += (moveDir * speed + pushVelocity) * Time.deltaTime;
+        }
+        else
+        {
+            if (!collisionChecker.IsColliding(transform.position + pushVelocity * Time.deltaTime, false))
+                transform.position += pushVelocity * Time.deltaTime;
+        }
+
+        if (slowTimer > 0)
+        {
+            slowTimer -= Time.deltaTime;
+
+            if (slowTimer < 0)
+                speed = baseSpeed;
+        }
+
+        if(stunTimer > 0)
+        {
+            stunTimer -= Time.deltaTime;
+        }
+
+        if (pushVelocity.magnitude > 0)
+        {
+            if (pushVelocity.magnitude < resistForce)
+                pushVelocity = new Vector3(0, 0, 0);
+            else
+                pushVelocity -= pushVelocity.normalized * resistForce * Time.deltaTime;
+        }
+
+        Turn(moveDir);
+    }
+
+    private void Turn(Vector3 turnDir)
+    {
+        float tempRot;
+
+        float h = Mathf.Sqrt(turnDir.x * turnDir.x + turnDir.z * turnDir.z);
+
+        //Determine the rotation of this node relative to the head
+        if (h != 0)
+        {
+            if (turnDir.x >= 0)
+                tempRot = Mathf.Acos(turnDir.z / h);
+            else
+                tempRot = 2.0f * Mathf.PI - Mathf.Acos(turnDir.z / h);
+
+            transform.eulerAngles = new Vector3(0, tempRot, 0);
+        }
+    }
+
+    private void PlayIdleSound()
+    {
+        int rand = Random.Range(0, idleSounds.Count);
+
+        audioSource.clip = idleSounds[rand];
+        audioSource.Play();
+    }
+
+    private void PlayDamageSound()
+    {
+        int rand = Random.Range(0, damageSounds.Count);
+
+        audioSource.clip = damageSounds[rand];
+        audioSource.Play();
+    }
+
+    private void PlayAttackSound()
+    {
+        int rand = Random.Range(0, attackSounds.Count);
+
+        audioSource.clip = attackSounds[rand];
+        audioSource.Play();
     }
 }

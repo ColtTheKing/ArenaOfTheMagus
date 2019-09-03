@@ -13,14 +13,14 @@ public class Gesture
 
     public List<Vector3> leftNodes, rightNodes;
     public GestureHand curHands;
-    public float yRotation; //starting rotation of the gesture in degrees
     public SpellHandler.SpellType spell;
 
-    public Gesture(float yRotation, GestureHand hand)
-    {
-        this.yRotation = yRotation;
+    private Vector3 leftLastNodePos, rightLastNodePos;
+    private float leftRotation, rightRotation;
 
-        switch(hand)
+    public Gesture(GestureHand startingHand)
+    {
+        switch (startingHand)
         {
             case GestureHand.LEFT:
                 leftNodes = new List<Vector3>();
@@ -36,7 +36,7 @@ public class Gesture
                 break;
         }
 
-        curHands = hand;
+        curHands = startingHand;
         spell = SpellHandler.SpellType.NONE;
     }
 
@@ -67,79 +67,105 @@ public class Gesture
         }
     }
 
-    public void AddNode(Vector3 node, GestureHand hand)
+    public void AddStartPoint(GestureHand hand, Vector3 startPos)
     {
-        //Fix node based on rotation of head
-        float h, nodeRot, theta;
-        Vector3 rotNode;
+        float tempRot;
 
-        //Distance from the headset to the node
-        h = Mathf.Sqrt(node.x * node.x + node.z * node.z);
+        float h = Mathf.Sqrt(startPos.x * startPos.x + startPos.z * startPos.z);
 
-        //If the node is exactly above or below the head
-        if (h != 0)
+        //Determine the rotation of this node relative to the head
+        if (h == 0)
         {
-            //Rotation of the node relative to the forward direction of the gesture
-            nodeRot = Mathf.Acos(node.z / h);
-
-            //Corrects for cosine only going up to 180
-            if (node.x < 0)
-                nodeRot = 2.0f * Mathf.PI - nodeRot;
-
-            //Angle of the node when the gesture is rotated back to zero
-            theta = nodeRot - (yRotation * Mathf.Deg2Rad);
-
-            if (theta >= 2.0f * Mathf.PI)
-                theta -= 2.0f * Mathf.PI;
-            else if (theta < 0.0f)
-                theta += 2.0f * Mathf.PI;
-
-            //theta must be normalized to be used in the trigonometric functions
-            //this also determines which quadrant and thus the sign of the x and y
-            if (theta > 3.0f * Mathf.PI / 2.0f)
-            {
-                theta = 2.0f * Mathf.PI - theta;
-                rotNode = new Vector3(-1, node.y, 1);
-            }
-            else if (theta > Mathf.PI)
-            {
-                theta = theta - Mathf.PI;
-                rotNode = new Vector3(-1, node.y, -1);
-            }
-            else if (theta > Mathf.PI / 2.0f)
-            {
-                theta = Mathf.PI - theta;
-                rotNode = new Vector3(1, node.y, -1);
-            }
-            else
-            {
-                rotNode = new Vector3(1, node.y, 1);
-            }
-
-            rotNode.x *= h * Mathf.Sin(theta);
-            rotNode.z *= h * Mathf.Cos(theta);
+            tempRot = 0;
         }
         else
         {
-            rotNode = new Vector3(0, node.y, 0);
+            if(startPos.x >= 0)
+                tempRot = Mathf.Acos(startPos.z / h);
+            else
+                tempRot = 2.0f * Mathf.PI - Mathf.Acos(startPos.z / h);
         }
 
+        //If this node is the first then it should be the starting position
+        if (hand == GestureHand.LEFT && leftNodes.Count == 0)
+        {
+            leftNodes.Add(startPos);
+            leftLastNodePos = startPos;
+
+            leftRotation = tempRot;
+
+            //Debug.Log("Starting left");
+            //Debug.Log("left rot = " + leftRotation);
+        }
+        else if (hand == GestureHand.RIGHT && rightNodes.Count == 0)
+        {
+            rightNodes.Add(startPos);
+            rightLastNodePos = startPos;
+
+            rightRotation = tempRot;
+
+            //Debug.Log("Starting right");
+            //Debug.Log("right rot = " + rightRotation);
+        }
+    }
+
+    public void AddNode(Vector3 node, GestureHand hand)
+    {
+        Vector3 offset;
+        float theta;
+
+        //Add a new node equal to the offset of the last node to this one and update the last node variable
+        switch (hand)
+        {
+            case GestureHand.LEFT:
+                if (leftLastNodePos != null)
+                {
+                    offset = node - leftLastNodePos;
+                    leftLastNodePos = node;
+                    theta = leftRotation;
+                }
+                else
+                    throw new System.Exception("The start point for this hand has not been added yet");
+                break;
+            case GestureHand.RIGHT:
+                if (rightLastNodePos != null)
+                {
+                    offset = node - rightLastNodePos;
+                    rightLastNodePos = node;
+                    theta = rightRotation;
+                }
+                else
+                    throw new System.Exception("The start point for this hand has not been added yet");
+                break;
+            default:
+                throw new System.Exception("You shouldn't be adding a node to both hands at once");
+        }
+
+        //Rotate the offset as if the starting rotation of the gesture was zero
+        float x = offset.x * Mathf.Cos(theta) - offset.z * Mathf.Sin(theta);
+        float z = offset.x * Mathf.Sin(theta) + offset.z * Mathf.Cos(theta);
+
+        offset.x = x;
+        offset.z = z;
+
+        //Debug.Log("x = " + x);
+        //Debug.Log("z = " + z);
+
+        //Add the offset to the gesture
         switch (hand)
         {
             case GestureHand.LEFT:
                 if(leftNodes != null)
-                    leftNodes.Add(rotNode);
+                    leftNodes.Add(offset);
                 else
                     throw new System.Exception("This hand does not exist in this gesture");
                 break;
             case GestureHand.RIGHT:
                 if (rightNodes != null)
-                    rightNodes.Add(rotNode);
+                    rightNodes.Add(offset);
                 else
                     throw new System.Exception("This hand does not exist in this gesture");
                 break;
-            case GestureHand.BOTH:
-                throw new System.Exception("Should not add the same node to both hands");
         }
     }
 
@@ -161,6 +187,31 @@ public class Gesture
                     throw new System.Exception("Node index is too high. Count is " + rightNodes.Count + ", but index is " + index);
                 else
                     return rightNodes[index];
+            default:
+                throw new System.Exception("Unable to get the node at more than one hand");
+        }
+    }
+
+    public void SetNodeAt(int index, GestureHand hand, Vector3 value)
+    {
+        switch (hand)
+        {
+            case GestureHand.LEFT:
+                if (leftNodes == null)
+                    throw new System.Exception("This hand does not exist in this gesture");
+                else if (index >= leftNodes.Count)
+                    throw new System.Exception("Node index is too high. Count is " + leftNodes.Count + ", but index is " + index);
+                else
+                    leftNodes[index] = value;
+                break;
+            case GestureHand.RIGHT:
+                if (rightNodes == null)
+                    throw new System.Exception("This hand does not exist in this gesture");
+                else if (index >= rightNodes.Count)
+                    throw new System.Exception("Node index is too high. Count is " + rightNodes.Count + ", but index is " + index);
+                else
+                    rightNodes[index] = value;
+                break;
             default:
                 throw new System.Exception("Unable to get the node at more than one hand");
         }
@@ -198,17 +249,34 @@ public class Gesture
             //The relative length of the segments between the samples
             float segment = (float)(NumNodes(GestureHand.LEFT) - 1) / (numNodes - 1);
 
+            //Keeps track of the actual position each point on the gesture is at
+            Vector3 lastNodePosition = NodeAt(0, GestureHand.LEFT);
+            int lastNodeIndex = 0;
+
+            Vector3 lastNodeConvertedPosition = lastNodePosition;
+
             for (int i = 1; i < numNodes - 1; i++)
             {
+                //How far along the gesture the current segment is
                 float curSegment = segment * i;
 
-                Vector3 curSample = NodeAt(Mathf.FloorToInt(curSegment), GestureHand.LEFT);
-                float percentAlong = curSegment % 1;
+                //If we passed any nodes increment the index and add on that node's offset
+                while(Mathf.FloorToInt(curSegment) > lastNodeIndex)
+                {
+                    lastNodePosition += NodeAt(++lastNodeIndex, GestureHand.LEFT);
+                }
 
-                Vector3 changeVec = NodeAt(Mathf.FloorToInt(curSegment) + 1, GestureHand.LEFT) - curSample;
-                changeVec *= percentAlong;
+                //Calculate the portion of the next node's distance to move
+                Vector3 partOfNext = NodeAt(lastNodeIndex+1, GestureHand.LEFT) * (curSegment % 1);
 
-                nodesConverted.Add(curSample + changeVec);
+                //Calculate the actual position of the converted node
+                Vector3 convertedNodePos = lastNodePosition + partOfNext;
+
+                //Add the offset of the converted node from the last converted node
+                nodesConverted.Add(convertedNodePos - lastNodeConvertedPosition);
+
+                //Update the last converted node's position
+                lastNodeConvertedPosition = convertedNodePos;
             }
 
             //The last node will be the same
@@ -228,17 +296,34 @@ public class Gesture
             //The relative length of the segments between the samples
             float segment = (float)(NumNodes(GestureHand.RIGHT) - 1) / (numNodes - 1);
 
+            //Keeps track of the actual position each point on the gesture is at
+            Vector3 lastNodePosition = NodeAt(0, GestureHand.RIGHT);
+            int lastNodeIndex = 0;
+
+            Vector3 lastNodeConvertedPosition = lastNodePosition;
+
             for (int i = 1; i < numNodes - 1; i++)
             {
+                //How far along the gesture the current segment is
                 float curSegment = segment * i;
 
-                Vector3 curSample = NodeAt(Mathf.FloorToInt(curSegment), GestureHand.RIGHT);
-                float percentAlong = curSegment % 1;
+                //If we passed any nodes increment the index and add on that node's offset
+                while (Mathf.FloorToInt(curSegment) > lastNodeIndex)
+                {
+                    lastNodePosition += NodeAt(++lastNodeIndex, GestureHand.RIGHT);
+                }
 
-                Vector3 changeVec = NodeAt(Mathf.FloorToInt(curSegment) + 1, GestureHand.RIGHT) - curSample;
-                changeVec *= percentAlong;
+                //Calculate the portion of the next node's distance to move
+                Vector3 partOfNext = NodeAt(lastNodeIndex + 1, GestureHand.RIGHT) * (curSegment % 1);
 
-                nodesConverted.Add(curSample + changeVec);
+                //Calculate the actual position of the converted node
+                Vector3 convertedNodePos = lastNodePosition + partOfNext;
+
+                //Add the offset of the converted node from the last converted node
+                nodesConverted.Add(convertedNodePos - lastNodeConvertedPosition);
+
+                //Update the last converted node's position
+                lastNodeConvertedPosition = convertedNodePos;
             }
 
             //The last node will be the same
@@ -249,9 +334,17 @@ public class Gesture
         }
     }
 
-    public float GetRotation()
+    public float GetRotation(GestureHand hand)
     {
-        return yRotation;
+        switch(hand)
+        {
+            case GestureHand.LEFT:
+                return leftRotation;
+            case GestureHand.RIGHT:
+                return rightRotation;
+            default:
+                return leftRotation + rightRotation / 2;
+        }
     }
 
     public GestureHand GetCurHands()
@@ -269,19 +362,24 @@ public class Gesture
         return spell;
     }
 
-    public float AverageDifference(Gesture toCompare, GestureHand hand)
+    public float AverageDifference(Gesture toCompare, float lengthFactor, GestureHand hand)
     {
         float diff = 0;
         int numNodes = NumNodes(hand);
 
-        for (int i = 0; i < numNodes; i++)
+        for (int i = 1; i < numNodes; i++)
         {
-            Vector3 diffVec = NodeAt(i, hand) - toCompare.NodeAt(i, hand);
+            Vector3 node1 = NodeAt(i, hand);
+            Vector3 node2 = toCompare.NodeAt(i, hand);
+            
+            float angleDifference = 1.0f - Vector3.Dot(node1.normalized, node2.normalized);
 
-            diff += diffVec.magnitude;
+            float lengthDifference = Mathf.Abs(node1.magnitude - node2.magnitude) / node1.magnitude;
+
+            diff += angleDifference + lengthDifference * lengthFactor;
         }
 
-        return diff / numNodes;
+        return diff / (numNodes-1);
     }
 
     public void DuplicateHand()
@@ -302,6 +400,8 @@ public class Gesture
 
                 rightNodes.Add(temp);
             }
+
+            rightRotation = 2.0f * Mathf.PI - leftRotation;
         }
         else if (leftNodes == null)
         {
@@ -316,6 +416,8 @@ public class Gesture
 
                 leftNodes.Add(temp);
             }
+
+            leftRotation = 2.0f * Mathf.PI - rightRotation;
         }
     }
 }
