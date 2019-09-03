@@ -60,6 +60,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lifespan: 0.4
+  cooldown: 1
   shoveForce: 1.5
   particleStart: 0.8
 --- !u!54 &6803918211628966107

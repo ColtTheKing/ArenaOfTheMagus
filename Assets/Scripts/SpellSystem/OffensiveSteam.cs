@@ -34,7 +34,7 @@ public class OffensiveSteam : Spell
     public override void Cast(Player player, bool left)
     {
         //Get the position between the two hands
-        Vector3 betweenHands = (player.rightHand.transform.position + player.leftHand.transform.position) / 2;
+        Vector3 betweenHands = (player.rightHand.CenterPos() + player.leftHand.CenterPos()) / 2;
         transform.position += betweenHands;
 
         transform.eulerAngles += new Vector3(0, player.playerHead.transform.eulerAngles.y, 0);

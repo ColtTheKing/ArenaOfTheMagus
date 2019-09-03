@@ -32,7 +32,7 @@ public class OffensiveNature : Spell
     public override void Cast(Player player, bool left)
     {
         //Get the position between the two hands
-        Vector3 betweenHands = player.rightHand.transform.position + (player.leftHand.transform.position - player.rightHand.transform.position);
+        Vector3 betweenHands = player.rightHand.CenterPos() + (player.leftHand.CenterPos() - player.rightHand.CenterPos());
         betweenHands.y = 0;
 
         transform.position += betweenHands;

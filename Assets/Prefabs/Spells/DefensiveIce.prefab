@@ -794,6 +794,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lifespan: 3
+  cooldown: 3
   shoveForce: 2
   shoveCutoff: 2
   distanceAhead: 2

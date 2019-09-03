@@ -60,6 +60,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lifespan: 5
+  cooldown: 5
   wanderDuration: 2
   distanceAhead: 2
 --- !u!54 &6760439661024137241

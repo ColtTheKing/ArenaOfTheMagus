@@ -35,7 +35,7 @@ public class QuickAir : Spell
     {
         PlayerHand hand = left ? player.leftHand : player.rightHand;
 
-        transform.position += hand.transform.position;
+        transform.position += hand.CenterPos();
         velocity = new Vector3(hand.transform.forward.x, 0, hand.transform.forward.z);
         velocity = velocity.normalized * speed;
 

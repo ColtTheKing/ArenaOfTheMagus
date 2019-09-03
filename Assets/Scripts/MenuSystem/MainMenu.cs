@@ -5,7 +5,7 @@ using UnityEngine;
 public class MainMenu : MenuScreen
 {
     public ElementSelectMenu elementSelectMenu;
-    //PUT OTHER SUBMENUS HERE
+    public GestureCalibrationMenu gestureCalibrateMenu;
 
     public PlayButton playButton;
     public CalibrateButton calibrateButton;
@@ -27,10 +27,11 @@ public class MainMenu : MenuScreen
 
         //Initialize the sub-menus
         elementSelectMenu.Init(gameManager, this);
+        gestureCalibrateMenu.Init(gameManager, this);
 
         //Initialize the buttons
-        playButton.Init(0, this, elementSelectMenu);
-        calibrateButton.Init(1);
+        playButton.Init(0, this);
+        calibrateButton.Init(1, this);
         settingsButton.Init(2);
         quitButton.Init(3);
     }
@@ -67,7 +68,7 @@ public class MainMenu : MenuScreen
                     elementSelectMenu.PressButton(buttonId);
                     break;
                 case 2:
-                    //Calibrate menu
+                    gestureCalibrateMenu.PressButton(buttonId);
                     break;
                 case 3:
                     //Settings menu
@@ -96,7 +97,8 @@ public class MainMenu : MenuScreen
                 curMenu = 1;
                 break;
             case 1:
-                //Calibrate menu
+                gestureCalibrateMenu.ActivateMenu();
+                curMenu = 2;
                 break;
             case 2:
                 //Settings menu

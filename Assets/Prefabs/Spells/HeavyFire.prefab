@@ -4828,6 +4828,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lifespan: 3
+  cooldown: 2
   speed: 5
   dotDuration: 3
   damage: 5

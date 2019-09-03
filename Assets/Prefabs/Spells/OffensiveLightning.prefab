@@ -241,6 +241,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lifespan: 0.1
+  cooldown: 2
   spellVisualization: {fileID: 1919893767036669239, guid: cdc83367e41d1354cbe04b71b48e1c5f,
     type: 3}
   lightningDuration: 0.4

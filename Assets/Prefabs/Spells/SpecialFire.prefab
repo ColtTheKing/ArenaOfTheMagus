@@ -66,6 +66,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lifespan: 4
+  cooldown: 4
   distanceAhead: 3
   dotDuration: 5
   dotDamage: 1

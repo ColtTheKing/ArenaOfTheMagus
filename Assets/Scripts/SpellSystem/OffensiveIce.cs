@@ -19,19 +19,15 @@ public class OffensiveIce : Spell
     public override void Update()
     {
         base.Update();
-
-        //Move the spell
-        transform.position += velocity * Time.deltaTime;
     }
 
     public override void Cast(Player player, bool left)
     {
         //Get the position between the two hands
-        Vector3 betweenHands = (player.rightHand.transform.position + player.leftHand.transform.position) / 2;
-
+        Vector3 betweenHands = (player.rightHand.CenterPos() + player.leftHand.CenterPos()) / 2;
         transform.position += betweenHands;
-        velocity = new Vector3(player.playerHead.transform.forward.x, 0, player.playerHead.transform.forward.z);
-        velocity = velocity.normalized * speed;
+
+        transform.eulerAngles += new Vector3(0, player.playerHead.transform.eulerAngles.y, 0);
     }
 
     void OnCollisionEnter(Collision collision)

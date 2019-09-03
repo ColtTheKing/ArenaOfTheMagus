@@ -4,6 +4,11 @@ using UnityEngine;
 
 public abstract class MenuScreen : MonoBehaviour
 {
+    public virtual void Awake()
+    {
+
+    }
+
     // Start is called before the first frame update
     public virtual void Start()
     {

@@ -80,26 +80,10 @@ public class Gesture
         }
         else
         {
-            float referenceAngle = Mathf.Acos(startPos.z / h);
-
-            Debug.Log("ref angle = " + referenceAngle);
-
-            if (startPos.x >= 0 && startPos.z >= 0)
-            {
-                tempRot = referenceAngle;
-            }
-            else if (startPos.x >= 0 && startPos.z < 0)
-            {
-                tempRot = Mathf.PI - referenceAngle;
-            }
-            else if (startPos.x < 0 && startPos.z < 0)
-            {
-                tempRot = Mathf.PI + referenceAngle;
-            }
+            if(startPos.x >= 0)
+                tempRot = Mathf.Acos(startPos.z / h);
             else
-            {
-                tempRot = 2 * Mathf.PI - referenceAngle;
-            }
+                tempRot = 2.0f * Mathf.PI - Mathf.Acos(startPos.z / h);
         }
 
         //If this node is the first then it should be the starting position
@@ -110,8 +94,8 @@ public class Gesture
 
             leftRotation = tempRot;
 
-            Debug.Log("Starting left");
-            Debug.Log("left rot = " + leftRotation);
+            //Debug.Log("Starting left");
+            //Debug.Log("left rot = " + leftRotation);
         }
         else if (hand == GestureHand.RIGHT && rightNodes.Count == 0)
         {
@@ -120,8 +104,8 @@ public class Gesture
 
             rightRotation = tempRot;
 
-            Debug.Log("Starting right");
-            Debug.Log("right rot = " + rightRotation);
+            //Debug.Log("Starting right");
+            //Debug.Log("right rot = " + rightRotation);
         }
     }
 
@@ -138,7 +122,7 @@ public class Gesture
                 {
                     offset = node - leftLastNodePos;
                     leftLastNodePos = node;
-                    theta = -leftRotation;
+                    theta = leftRotation;
                 }
                 else
                     throw new System.Exception("The start point for this hand has not been added yet");
@@ -148,7 +132,7 @@ public class Gesture
                 {
                     offset = node - rightLastNodePos;
                     rightLastNodePos = node;
-                    theta = -rightRotation;
+                    theta = rightRotation;
                 }
                 else
                     throw new System.Exception("The start point for this hand has not been added yet");
@@ -163,6 +147,9 @@ public class Gesture
 
         offset.x = x;
         offset.z = z;
+
+        //Debug.Log("x = " + x);
+        //Debug.Log("z = " + z);
 
         //Add the offset to the gesture
         switch (hand)
@@ -200,6 +187,31 @@ public class Gesture
                     throw new System.Exception("Node index is too high. Count is " + rightNodes.Count + ", but index is " + index);
                 else
                     return rightNodes[index];
+            default:
+                throw new System.Exception("Unable to get the node at more than one hand");
+        }
+    }
+
+    public void SetNodeAt(int index, GestureHand hand, Vector3 value)
+    {
+        switch (hand)
+        {
+            case GestureHand.LEFT:
+                if (leftNodes == null)
+                    throw new System.Exception("This hand does not exist in this gesture");
+                else if (index >= leftNodes.Count)
+                    throw new System.Exception("Node index is too high. Count is " + leftNodes.Count + ", but index is " + index);
+                else
+                    leftNodes[index] = value;
+                break;
+            case GestureHand.RIGHT:
+                if (rightNodes == null)
+                    throw new System.Exception("This hand does not exist in this gesture");
+                else if (index >= rightNodes.Count)
+                    throw new System.Exception("Node index is too high. Count is " + rightNodes.Count + ", but index is " + index);
+                else
+                    rightNodes[index] = value;
+                break;
             default:
                 throw new System.Exception("Unable to get the node at more than one hand");
         }
@@ -359,6 +371,7 @@ public class Gesture
         {
             Vector3 node1 = NodeAt(i, hand);
             Vector3 node2 = toCompare.NodeAt(i, hand);
+            
             float angleDifference = 1.0f - Vector3.Dot(node1.normalized, node2.normalized);
 
             float lengthDifference = Mathf.Abs(node1.magnitude - node2.magnitude) / node1.magnitude;

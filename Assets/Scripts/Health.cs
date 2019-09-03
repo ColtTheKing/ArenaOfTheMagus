@@ -127,4 +127,9 @@ public class Health
         dotTimer = duration;
         dotDamage = dps;
     }
+
+    public int GetHealth()
+    {
+        return currentHP;
+    }
 }

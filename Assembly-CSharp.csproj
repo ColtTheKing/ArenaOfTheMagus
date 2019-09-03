@@ -62,6 +62,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\CollisionChecker.cs" />
     <Compile Include="Assets\Scripts\Enemy.cs" />
     <Compile Include="Assets\Scripts\EnemyFlock.cs" />
     <Compile Include="Assets\Scripts\EventManager.cs" />
@@ -76,12 +77,16 @@
     <Compile Include="Assets\Scripts\MenuSystem\ElementButton.cs" />
     <Compile Include="Assets\Scripts\MenuSystem\ElementSelectMenu.cs" />
     <Compile Include="Assets\Scripts\MenuSystem\FightButton.cs" />
+    <Compile Include="Assets\Scripts\MenuSystem\GestureButton.cs" />
+    <Compile Include="Assets\Scripts\MenuSystem\GestureCalibrationMenu.cs" />
     <Compile Include="Assets\Scripts\MenuSystem\MainMenu.cs" />
     <Compile Include="Assets\Scripts\MenuSystem\MenuButton.cs" />
     <Compile Include="Assets\Scripts\MenuSystem\MenuScreen.cs" />
     <Compile Include="Assets\Scripts\MenuSystem\PlayButton.cs" />
     <Compile Include="Assets\Scripts\MenuSystem\QuitButton.cs" />
+    <Compile Include="Assets\Scripts\MenuSystem\RestartGestureButton.cs" />
     <Compile Include="Assets\Scripts\MenuSystem\SettingsButton.cs" />
+    <Compile Include="Assets\Scripts\MenuSystem\StartGestureButton.cs" />
     <Compile Include="Assets\Scripts\Obstacle.cs" />
     <Compile Include="Assets\Scripts\Player.cs" />
     <Compile Include="Assets\Scripts\PlayerHand.cs" />

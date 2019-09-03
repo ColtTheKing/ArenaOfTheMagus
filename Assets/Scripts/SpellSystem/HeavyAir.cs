@@ -38,7 +38,7 @@ public class HeavyAir : Spell
     {
         PlayerHand hand = left ? player.leftHand : player.rightHand;
 
-        transform.position += new Vector3(hand.transform.position.x, 0, hand.transform.position.z);
+        transform.position += new Vector3(hand.CenterPos().x, 0, hand.CenterPos().z);
         velocity = new Vector3(player.playerHead.transform.forward.x, 0, player.playerHead.transform.forward.z);
         velocity = velocity.normalized * speed;
     }

@@ -37,7 +37,7 @@ public class HeavyEarth : Spell
     {
         PlayerHand hand = left ? player.leftHand : player.rightHand;
 
-        transform.position += hand.transform.position;
+        transform.position += hand.CenterPos();
         velocity = new Vector3(player.playerHead.transform.forward.x, 0, player.playerHead.transform.forward.z);
         velocity = velocity.normalized * speed;
         velocity.y = upwardsForce;

@@ -6,24 +6,22 @@ public class EnemyFlock
 {
     public List<Enemy> flockMembers;
     public Player player;
-    public List<Obstacle> obstacles;
 
-    private Vector3 origin;
-    private float wanderTimer, wanderFrequency, wanderRadius;
+    private float wanderTimer, wanderFrequency, wanderRadius, arenaRadius;
+    private CollisionChecker collisionChecker;
 
-    public EnemyFlock(List<Enemy> enemies, Vector3 origin, float wanderRadius, float wanderFrequency, Player player, List<Obstacle> obstacles)
+    public EnemyFlock(List<Enemy> enemies, float wanderRadius, float arenaRadius, float wanderFrequency, Player player, float healthModifier, float damageModifier, CollisionChecker collisionChecker)
     {
         flockMembers = enemies;
         
-        this.origin = origin;
         this.wanderRadius = wanderRadius;
+        this.arenaRadius = arenaRadius;
         this.wanderFrequency = wanderFrequency;
         this.player = player;
-        this.obstacles = obstacles;
 
         for(int i = 0; i < flockMembers.Count; i++)
         {
-            flockMembers[i].Init(this, i);
+            flockMembers[i].Init(this, i, healthModifier, damageModifier, collisionChecker);
         }
     }
 
@@ -59,8 +57,32 @@ public class EnemyFlock
     {
         wanderTimer = wanderFrequency;
 
-        float randX = Random.Range(origin.x - wanderRadius, origin.x + wanderRadius);
-        float randZ = Random.Range(origin.z - wanderRadius, origin.z + wanderRadius);
+        Vector3 currentWander = flockMembers[0].GetWanderLocation();
+
+        float lowX, highX, lowZ, highZ;
+
+        if (currentWander.x - wanderRadius < -arenaRadius)
+            lowX = -arenaRadius;
+        else
+            lowX = currentWander.x - wanderRadius;
+
+        if (currentWander.x + wanderRadius > arenaRadius)
+            highX = arenaRadius;
+        else
+            highX = currentWander.x + wanderRadius;
+
+        if (currentWander.z - wanderRadius < -arenaRadius)
+            lowZ = -arenaRadius;
+        else
+            lowZ = currentWander.z - wanderRadius;
+
+        if (currentWander.z + wanderRadius > arenaRadius)
+            highZ = arenaRadius;
+        else
+            highZ = currentWander.z + wanderRadius;
+
+        float randX = Random.Range(lowX, highX);
+        float randZ = Random.Range(lowZ, highZ);
 
         Vector3 wanderLocation = new Vector3(randX, 0, randZ);
 

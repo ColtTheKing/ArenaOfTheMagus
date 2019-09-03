@@ -94,6 +94,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lifespan: 4
+  cooldown: 2
   speed: 6
   gravity: 9.81
   shoveForce: 2

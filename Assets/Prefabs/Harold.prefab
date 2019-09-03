@@ -1632,6 +1632,7 @@ GameObject:
   - component: {fileID: 7378782457082681341}
   - component: {fileID: 4923329646181023829}
   - component: {fileID: 1570925207572816224}
+  - component: {fileID: 1244919327461626841}
   m_Layer: 0
   m_Name: Harold
   m_TagString: Untagged
@@ -1698,22 +1699,31 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startingHP: 10
   attackDamage: 1
-  baseSpeed: 1
+  baseSpeed: 1.5
   attackCooldown: 2
   attackRange: 1
   resistForce: 1
   pursueDuration: 3
   pursueAheadDist: 1
-  pursueRange: 8
-  avoidDist: 0.5
+  pursueRange: 14
+  avoidDist: 1
   separationRadius: 2
   pursueCoefficient: 1
-  avoidCoefficient: 0.4
+  avoidCoefficient: 10
   separationCoefficient: 1
-  cohesionCoefficient: 0.2
+  cohesionCoefficient: 0.1
   wanderCoefficient: 1
   baseMaterial: {fileID: 2100000, guid: 5816d86b20d0e6a4db6a00088c56b219, type: 2}
   weakenMaterial: {fileID: 2100000, guid: e48d997810ed6144eb2282c440ab7c94, type: 2}
+  damageSounds:
+  - {fileID: 8300000, guid: c6e1dca6c33f3af4cbf9fcfe350dfd14, type: 3}
+  idleSounds:
+  - {fileID: 8300000, guid: c0180adaa4c5c1b479737115963d55ce, type: 3}
+  - {fileID: 8300000, guid: 53105a6328cf4bb4580741de6b51137a, type: 3}
+  - {fileID: 8300000, guid: ff5bc9736e719574d8adba2ee06c9eaa, type: 3}
+  attackSounds:
+  - {fileID: 8300000, guid: f6d0fc9e861221e45826be0932ce1cb4, type: 3}
+  - {fileID: 8300000, guid: 8c910fc56a6738e4f9182ede52e0f723, type: 3}
 --- !u!54 &4923329646181023829
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1744,6 +1754,102 @@ CapsuleCollider:
   m_Height: 40
   m_Direction: 1
   m_Center: {x: 0, y: 18, z: 0}
+--- !u!82 &1244919327461626841
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1277248881017598744}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_PlayOnAwake: 0
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &1296942876271516282
 GameObject:
   m_ObjectHideFlags: 0

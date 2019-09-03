@@ -4798,9 +4798,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 386aa6e020bee6044ae0bc44aae181b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lifespan: 5
-  distanceAhead: 1
-  pullSpeed: 5
+  lifespan: 3
+  cooldown: 3
+  distanceAhead: 3
+  pullSpeed: 2
 --- !u!54 &1709025568841159421
 Rigidbody:
   m_ObjectHideFlags: 0

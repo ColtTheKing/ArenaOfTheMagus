@@ -110,6 +110,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lifespan: 1
+  cooldown: 2
   wanderDuration: 1
   particleStart: 0.5
   damage: 2

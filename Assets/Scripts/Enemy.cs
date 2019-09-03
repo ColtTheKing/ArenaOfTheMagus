@@ -4,11 +4,12 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
-    public int startingHP, attackDamage;
-    public float baseSpeed, attackCooldown, attackRange, resistForce;
+    public int startingHP;
+    public float attackDamage, baseSpeed, attackCooldown, attackRange, resistForce;
     //AI Movement Variables
     public float pursueDuration, pursueAheadDist, pursueRange, avoidDist, separationRadius, pursueCoefficient, avoidCoefficient, separationCoefficient, cohesionCoefficient, wanderCoefficient;
     public Material baseMaterial, weakenMaterial;
+    public List<AudioClip> damageSounds, idleSounds, attackSounds;
 
     private Health healthComp;
     private float fireTimer, slowTimer, weakTimer, stunTimer, blindTimer, pursueTimer, attacking, speed, damageTaken;
@@ -17,6 +18,8 @@ public class Enemy : MonoBehaviour
     private Vector3 wanderLocation, pushVelocity;
     private bool alive;
     private ParticleSystem fireParticles;
+    private AudioSource audioSource;
+    private CollisionChecker collisionChecker;
 
     void Awake()
     {
@@ -29,13 +32,21 @@ public class Enemy : MonoBehaviour
     {
         healthComp = new Health(startingHP);
         fireParticles = GetComponentInChildren<ParticleSystem>();
+        audioSource = GetComponent<AudioSource>();
     }
 
     // Update is called once per frame
     void Update()
     {
+        int rand = Random.Range(0, 1000);
+
+        if (rand == 0)
+            PlayIdleSound();
+
         //Have the AI figure out what to do
         Move(DecideBehaviour());
+
+        transform.position -= new Vector3(0, transform.position.y, 0);
 
         if (fireTimer > 0)
         {
@@ -75,7 +86,7 @@ public class Enemy : MonoBehaviour
 
     public Vector3 DecideBehaviour()
     {
-        Vector3 move = new Vector3(0, 0, 0);
+        Vector3 move = Vector3.zero;
 
         RaycastHit objectSeen;
 
@@ -119,19 +130,23 @@ public class Enemy : MonoBehaviour
         return move;
     }
 
-    public void Init(EnemyFlock flock, int id)
+    public void Init(EnemyFlock flock, int id, float healthBonus, float damageBonus, CollisionChecker collisionChecker)
     {
         this.flock = flock;
         flockId = id;
+
+        this.collisionChecker = collisionChecker;
+
+        attackDamage += damageBonus;
+
+        healthComp = new Health(startingHP + (int)healthBonus);
     }
 
     public void Damage(float damage)
     {
-        Debug.Log("Enemy " + flockId + " hit for " + damage * damageTaken + " damage");
+        PlayDamageSound();
 
         healthComp.TakeDamage(damage * damageTaken);
-
-        //Maybe add a hurt sound effect
     }
 
     public void Ignite(float dps, float duration)
@@ -182,11 +197,18 @@ public class Enemy : MonoBehaviour
     {
         wanderLocation = location;
     }
+    
+    public Vector3 GetWanderLocation()
+    {
+        return wanderLocation;
+    }
 
     private void AttackPlayer()
     {
         //do attack
         flock.player.Damage(attackDamage);
+
+        PlayAttackSound();
 
         //set the attack cooldown
         attacking = attackCooldown;
@@ -199,13 +221,16 @@ public class Enemy : MonoBehaviour
         target.y = 0;
 
         //find the direction towards that point
-        Vector3 playerPursue = (target - transform.position).normalized;
+        Vector3 playerPursue = (target - transform.position).normalized * pursueCoefficient;
 
         //also take into account obstacle avoidance
-        Vector3 obstacleAvoid = AvoidObstacles();
+        Vector3 obstacleAvoid = AvoidObstacles() * avoidCoefficient;
+
+        //also stay separated from other flock members
+        Vector3 separation = Separate() * separationCoefficient;
 
         //Make the pursue be a unit vector
-        Vector3 moveDir = playerPursue * pursueCoefficient + obstacleAvoid * avoidCoefficient;
+        Vector3 moveDir = playerPursue + obstacleAvoid + separation;
         moveDir.y = 0;
         moveDir = moveDir.normalized;
 
@@ -215,27 +240,7 @@ public class Enemy : MonoBehaviour
     private Vector3 Flock()
     {
         //Stay separated from other flock members
-        Vector3 separation = Vector3.zero;
-
-        for(int i = 0; i < flock.flockMembers.Count; i++)
-        {
-            if (i == flockId)
-                continue;
-
-            Vector3 fromFlockMember = transform.position - flock.flockMembers[i].transform.position;
-
-            if (fromFlockMember.magnitude < separationRadius)
-            {
-                //Make force decrease from 1 to zero from the current flock member to the separation radius
-                float separationForce = Mathf.Sqrt(separationRadius - fromFlockMember.magnitude);
-                Vector3 hi = fromFlockMember.normalized * separationForce;
-                separation += hi;
-            }
-        }
-
-        //Keeps the value reasonable while allowing it to be smaller than 1
-        if (separation.magnitude > 1)
-            separation = separation.normalized;
+        Vector3 separation = Separate();
 
         separation *= separationCoefficient;
 
@@ -265,10 +270,13 @@ public class Enemy : MonoBehaviour
     {
         Vector3 avoid = Vector3.zero;
 
-        for (int i = 0; i < flock.obstacles.Count; i++)
+        for (int i = 0; i < collisionChecker.obstacles.Count; i++)
         {
-            Vector3 fromObstacle = transform.position - flock.obstacles[i].transform.position;
-            float avoidRadius = flock.obstacles[i].radius + avoidDist;
+            if (collisionChecker.obstacles[i].ignoreAvoid)
+                continue;
+
+            Vector3 fromObstacle = transform.position - collisionChecker.obstacles[i].transform.position;
+            float avoidRadius = collisionChecker.obstacles[i].radius + avoidDist;
 
             if (fromObstacle.magnitude < avoidRadius)
             {
@@ -276,6 +284,8 @@ public class Enemy : MonoBehaviour
                 float avoidForce = (avoidRadius - fromObstacle.magnitude) / avoidRadius;
 
                 avoid += fromObstacle.normalized * avoidForce;
+
+                Weaken(1, 1);
             }
         }
 
@@ -284,6 +294,34 @@ public class Enemy : MonoBehaviour
             avoid = avoid.normalized;
 
         return avoid;
+    }
+
+    private Vector3 Separate()
+    {
+        //Stay separated from other flock members
+        Vector3 separation = Vector3.zero;
+
+        for (int i = 0; i < flock.flockMembers.Count; i++)
+        {
+            if (i == flockId)
+                continue;
+
+            Vector3 fromFlockMember = transform.position - flock.flockMembers[i].transform.position;
+
+            if (fromFlockMember.magnitude < separationRadius)
+            {
+                //Make force decrease from 1 to zero from the current flock member to the separation radius
+                float separationForce = Mathf.Sqrt(separationRadius - fromFlockMember.magnitude);
+                Vector3 hi = fromFlockMember.normalized * separationForce;
+                separation += hi;
+            }
+        }
+
+        //Keeps the value reasonable while allowing it to be smaller than 1
+        if (separation.magnitude > 1)
+            separation = separation.normalized;
+
+        return separation;
     }
 
     public void MarkToKill()
@@ -303,10 +341,16 @@ public class Enemy : MonoBehaviour
 
     private void Move(Vector3 moveDir)
     {
-        if(stunTimer <= 0)
-            transform.position += (moveDir * speed + pushVelocity) * Time.deltaTime;
+        if (stunTimer <= 0)
+        {
+            if (!collisionChecker.IsColliding(transform.position + (moveDir * speed + pushVelocity) * Time.deltaTime, false))
+                transform.position += (moveDir * speed + pushVelocity) * Time.deltaTime;
+        }
         else
-            transform.position += pushVelocity * Time.deltaTime;
+        {
+            if (!collisionChecker.IsColliding(transform.position + pushVelocity * Time.deltaTime, false))
+                transform.position += pushVelocity * Time.deltaTime;
+        }
 
         if (slowTimer > 0)
         {
@@ -328,5 +372,49 @@ public class Enemy : MonoBehaviour
             else
                 pushVelocity -= pushVelocity.normalized * resistForce * Time.deltaTime;
         }
+
+        Turn(moveDir);
+    }
+
+    private void Turn(Vector3 turnDir)
+    {
+        float tempRot;
+
+        float h = Mathf.Sqrt(turnDir.x * turnDir.x + turnDir.z * turnDir.z);
+
+        //Determine the rotation of this node relative to the head
+        if (h != 0)
+        {
+            if (turnDir.x >= 0)
+                tempRot = Mathf.Acos(turnDir.z / h);
+            else
+                tempRot = 2.0f * Mathf.PI - Mathf.Acos(turnDir.z / h);
+
+            transform.eulerAngles = new Vector3(0, tempRot, 0);
+        }
+    }
+
+    private void PlayIdleSound()
+    {
+        int rand = Random.Range(0, idleSounds.Count);
+
+        audioSource.clip = idleSounds[rand];
+        audioSource.Play();
+    }
+
+    private void PlayDamageSound()
+    {
+        int rand = Random.Range(0, damageSounds.Count);
+
+        audioSource.clip = damageSounds[rand];
+        audioSource.Play();
+    }
+
+    private void PlayAttackSound()
+    {
+        int rand = Random.Range(0, attackSounds.Count);
+
+        audioSource.clip = attackSounds[rand];
+        audioSource.Play();
     }
 }

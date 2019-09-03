@@ -4,7 +4,7 @@ using UnityEngine;
 
 public abstract class Spell : MonoBehaviour
 {
-    public float lifespan;
+    public float lifespan, cooldown;
 
     // Start is called before the first frame update
     public virtual void Start()

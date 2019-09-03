@@ -4828,6 +4828,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lifespan: 2.5
+  cooldown: 0.5
   speed: 10
   dotDuration: 3
   particleStart: 0.09

@@ -18,6 +18,7 @@ ScriptsOnlyBuild:
     - HeavyEarth
     - HeavyFire
     - HeavyWater
+    - LightningEffect
     - MainMenu
     - Obstacle
     - OffensiveDust
@@ -115,111 +116,113 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 9452}
     - Class: 114
-      Script: {instanceID: 9480}
+      Script: {instanceID: 9458}
     - Class: 114
-      Script: {instanceID: 9486}
+      Script: {instanceID: 9482}
     - Class: 114
-      Script: {instanceID: 9530}
+      Script: {instanceID: 9488}
     - Class: 114
-      Script: {instanceID: 9588}
+      Script: {instanceID: 9532}
     - Class: 114
-      Script: {instanceID: 9620}
+      Script: {instanceID: 9590}
     - Class: 114
       Script: {instanceID: 9622}
     - Class: 114
-      Script: {instanceID: 9628}
+      Script: {instanceID: 9624}
     - Class: 114
-      Script: {instanceID: 9634}
+      Script: {instanceID: 9630}
     - Class: 114
-      Script: {instanceID: 9642}
+      Script: {instanceID: 9636}
     - Class: 114
-      Script: {instanceID: 9678}
+      Script: {instanceID: 9644}
     - Class: 114
       Script: {instanceID: 9680}
     - Class: 114
-      Script: {instanceID: 9776}
+      Script: {instanceID: 9682}
     - Class: 114
-      Script: {instanceID: 9884}
+      Script: {instanceID: 9778}
     - Class: 114
-      Script: {instanceID: 10050}
+      Script: {instanceID: 9886}
     - Class: 114
-      Script: {instanceID: 10070}
+      Script: {instanceID: 10052}
     - Class: 114
-      Script: {instanceID: 10186}
+      Script: {instanceID: 10072}
     - Class: 114
-      Script: {instanceID: 10202}
+      Script: {instanceID: 10188}
     - Class: 114
-      Script: {instanceID: 10210}
+      Script: {instanceID: 10204}
     - Class: 114
-      Script: {instanceID: 10226}
+      Script: {instanceID: 10212}
     - Class: 114
-      Script: {instanceID: 10298}
+      Script: {instanceID: 10228}
     - Class: 114
-      Script: {instanceID: 10460}
+      Script: {instanceID: 10300}
     - Class: 114
       Script: {instanceID: 10462}
     - Class: 114
-      Script: {instanceID: 10508}
+      Script: {instanceID: 10464}
     - Class: 114
-      Script: {instanceID: 10554}
+      Script: {instanceID: 10510}
     - Class: 114
-      Script: {instanceID: 10562}
+      Script: {instanceID: 10556}
     - Class: 114
-      Script: {instanceID: 10712}
+      Script: {instanceID: 10564}
     - Class: 114
-      Script: {instanceID: 10718}
+      Script: {instanceID: 10714}
     - Class: 114
-      Script: {instanceID: 10766}
+      Script: {instanceID: 10720}
     - Class: 114
-      Script: {instanceID: 10850}
+      Script: {instanceID: 10768}
     - Class: 114
-      Script: {instanceID: 10906}
+      Script: {instanceID: 10852}
     - Class: 114
-      Script: {instanceID: 10980}
+      Script: {instanceID: 10908}
     - Class: 114
-      Script: {instanceID: 11046}
+      Script: {instanceID: 10982}
     - Class: 114
-      Script: {instanceID: 11104}
+      Script: {instanceID: 11048}
     - Class: 114
-      Script: {instanceID: 11118}
+      Script: {instanceID: 11106}
     - Class: 114
-      Script: {instanceID: 11188}
+      Script: {instanceID: 11120}
     - Class: 114
-      Script: {instanceID: 11322}
+      Script: {instanceID: 11190}
     - Class: 114
-      Script: {instanceID: 11382}
+      Script: {instanceID: 11324}
     - Class: 114
-      Script: {instanceID: 11416}
+      Script: {instanceID: 11384}
     - Class: 114
-      Script: {instanceID: 11602}
+      Script: {instanceID: 11418}
     - Class: 114
-      Script: {instanceID: 11620}
+      Script: {instanceID: 11604}
     - Class: 114
-      Script: {instanceID: 11826}
+      Script: {instanceID: 11622}
     - Class: 114
-      Script: {instanceID: 11832}
+      Script: {instanceID: 11828}
     - Class: 114
-      Script: {instanceID: 11962}
+      Script: {instanceID: 11834}
     - Class: 114
-      Script: {instanceID: 11970}
+      Script: {instanceID: 11964}
     - Class: 114
-      Script: {instanceID: 11990}
+      Script: {instanceID: 11972}
     - Class: 114
-      Script: {instanceID: 12038}
+      Script: {instanceID: 11992}
     - Class: 114
-      Script: {instanceID: 12086}
+      Script: {instanceID: 12040}
     - Class: 114
-      Script: {instanceID: 12162}
+      Script: {instanceID: 12088}
     - Class: 114
-      Script: {instanceID: 12168}
+      Script: {instanceID: 12164}
     - Class: 114
-      Script: {instanceID: 12204}
+      Script: {instanceID: 12170}
     - Class: 114
-      Script: {instanceID: 12280}
+      Script: {instanceID: 12172}
     - Class: 114
-      Script: {instanceID: 12294}
+      Script: {instanceID: 12208}
     - Class: 114
-      Script: {instanceID: 48990}
+      Script: {instanceID: 12284}
+    - Class: 114
+      Script: {instanceID: 12298}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 120
@@ -233,6 +236,10 @@ ScriptsOnlyBuild:
     - Class: 137
       Script: {instanceID: 0}
     - Class: 157
+      Script: {instanceID: 0}
+    - Class: 198
+      Script: {instanceID: 0}
+    - Class: 199
       Script: {instanceID: 0}
     - Class: 213
       Script: {instanceID: 0}
@@ -325,6 +332,12 @@ ScriptsOnlyBuild:
     className: SpecialWater
   - hash:
       serializedVersion: 2
+      Hash: c71b09a152d6b4d14cf772aebe691f05
+    assemblyName: Assembly-CSharp.dll
+    namespaceName: 
+    className: SpellEffect
+  - hash:
+      serializedVersion: 2
       Hash: c8ebe1a6445d89267090af7e7c5c957f
     assemblyName: SteamVR.dll
     namespaceName: Valve.VR.InteractionSystem
@@ -343,13 +356,13 @@ ScriptsOnlyBuild:
     className: SteamVR_CameraFlip
   - hash:
       serializedVersion: 2
-      Hash: 899c151fb574ab6d99102c610e1a0c6a
+      Hash: 008c2dd1f86426d4301b60b2c5494fa4
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: HeavyEarth
   - hash:
       serializedVersion: 2
-      Hash: 4de5aeda6b9d2cf49b9308e1ac5002c8
+      Hash: 15a6b246988a0aaee66dc70151e630be
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: QuickAir
@@ -385,7 +398,7 @@ ScriptsOnlyBuild:
     className: LocalToWorldProxy
   - hash:
       serializedVersion: 2
-      Hash: d6f954eabe2a224051f357461fcd8705
+      Hash: 0b9c458cb231745396a14ba4c4743403
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: PlayerHand
@@ -403,7 +416,7 @@ ScriptsOnlyBuild:
     className: SteamVR_LaserPointer
   - hash:
       serializedVersion: 2
-      Hash: f9527780a1efbd08fdc8b98dfdffb234
+      Hash: 46c824f9b98a82ce44ff8de4c6d67189
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: OffensiveDust
@@ -913,7 +926,7 @@ ScriptsOnlyBuild:
     className: TMP_SubMeshUI
   - hash:
       serializedVersion: 2
-      Hash: af334a6272592339b6cf862178c36f23
+      Hash: a761a5626f387ad862b8c6b880d85627
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: OffensiveMagma
@@ -979,7 +992,7 @@ ScriptsOnlyBuild:
     className: Player
   - hash:
       serializedVersion: 2
-      Hash: 4de5aeda6b9d2cf49b9308e1ac5002c8
+      Hash: 15a6b246988a0aaee66dc70151e630be
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: HeavyAir
@@ -991,7 +1004,7 @@ ScriptsOnlyBuild:
     className: GUIStyleAsset
   - hash:
       serializedVersion: 2
-      Hash: 4f1760f5d3e134a1fe2b5a7fef2eb529
+      Hash: de78cb8bd7ad8f61111cebb77c049297
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: DefensiveMagma
@@ -1411,7 +1424,7 @@ ScriptsOnlyBuild:
     className: SoundBowClick
   - hash:
       serializedVersion: 2
-      Hash: 14b41bca40a2150e1700dc5d3b407b41
+      Hash: 20f27f3da650052c023488a57e610731
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: Enemy
@@ -1525,7 +1538,7 @@ ScriptsOnlyBuild:
     className: DestroyOnDetachedFromHand
   - hash:
       serializedVersion: 2
-      Hash: 4fb822d6dea511dbe7d28912947aa66a
+      Hash: 31120a82fdb53230d288cfa9125489b4
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: SpecialFire
@@ -1699,7 +1712,7 @@ ScriptsOnlyBuild:
     className: DataPrivacyButton
   - hash:
       serializedVersion: 2
-      Hash: b4c02ff3d69eb05c2cdd4ea5b64fbca9
+      Hash: 99d16baa8869fb03b3d6b3134f6eb23a
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: OffensiveSteam
@@ -1795,7 +1808,7 @@ ScriptsOnlyBuild:
     className: BalloonColliders
   - hash:
       serializedVersion: 2
-      Hash: 02a64e46aecd064674329074d1c444d6
+      Hash: d3a70b329565879bb1572d82369f1a79
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: DefensiveLightning
@@ -1807,7 +1820,7 @@ ScriptsOnlyBuild:
     className: TMP_StyleSheet
   - hash:
       serializedVersion: 2
-      Hash: 26dc927c3818bb7f74548cc14426b129
+      Hash: b25dab65e8b4fc1749d91819343acb0d
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: QuickFire
@@ -1819,7 +1832,7 @@ ScriptsOnlyBuild:
     className: SquishyToy
   - hash:
       serializedVersion: 2
-      Hash: 0acba0178fc683ae8dcf426a2c699697
+      Hash: 327ecc2455e41dcb9dd106a7fec1b85a
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: QuickWater
@@ -1853,6 +1866,12 @@ ScriptsOnlyBuild:
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: OffensiveIce
+  - hash:
+      serializedVersion: 2
+      Hash: 5d18f4fecb8f571e453e57d5a5032a61
+    assemblyName: Assembly-CSharp.dll
+    namespaceName: 
+    className: LightningEffect
   - hash:
       serializedVersion: 2
       Hash: 26dc927c3818bb7f74548cc14426b129
@@ -1909,7 +1928,7 @@ ScriptsOnlyBuild:
     className: SteamVR_Frustum
   - hash:
       serializedVersion: 2
-      Hash: 70a7e6b6461fd36c15108a8747d87b22
+      Hash: a1bebcfc875c3c297d35b81e1b94e747
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: SpecialAir
@@ -1967,12 +1986,6 @@ ScriptsOnlyBuild:
     assemblyName: Unity.Timeline.dll
     namespaceName: UnityEngine.Timeline
     className: PlayableTrack
-  - hash:
-      serializedVersion: 2
-      Hash: c71b09a152d6b4d14cf772aebe691f05
-    assemblyName: Assembly-CSharp.dll
-    namespaceName: 
-    className: SpellEffect
   platform: 19
   scenePathNames:
   - Assets/Scenes/SampleScene.unity

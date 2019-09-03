@@ -60,6 +60,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lifespan: 5
+  cooldown: 5
   dps: 1
   particleStart: 1
 --- !u!54 &1039592377808364135

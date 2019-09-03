@@ -4828,6 +4828,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lifespan: 4
+  cooldown: 0.5
   speed: 6
   slowAmount: 0.8
   slowDuration: 1

@@ -4812,6 +4812,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lifespan: 5
+  cooldown: 5
   damageBoost: 1.5
   weakenDuration: 2
   distanceAhead: 2

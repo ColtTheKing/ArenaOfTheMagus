@@ -107,6 +107,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lifespan: 5
+  cooldown: 5
   dps: 1
   slowAmount: 0.8
   debuffDuration: 1

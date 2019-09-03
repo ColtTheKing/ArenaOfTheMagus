@@ -9552,6 +9552,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lifespan: 1
+  cooldown: 2
   damageBoost: 1.5
   weakenDuration: 2
   particleStart: 1
