@@ -19,7 +19,7 @@ public class Player : MonoBehaviour
     //Temporary visualization of the gesture
     public GameObject sample;
 
-    public float moveSpeed, runMultiplier, sampleTime, accuracyPerSample, lengthAccuracyFactor;
+    public float moveSpeed, runMultiplier, sampleTime, accuracyPerSample, damageSoundCD, collideSoundCD;
 
     public int samplesPerGesture, startingHP, numCalibrations;
 
@@ -29,7 +29,7 @@ public class Player : MonoBehaviour
 
     public Material baseMaterial, rockMaterial;
 
-    public AudioClip damageSound;
+    public AudioClip damageSound, collideSound;
 
     private GestureManager gestureManager;
     private SpellHandler spellHandler;
@@ -40,10 +40,11 @@ public class Player : MonoBehaviour
     private AudioSource audioSource;
     private bool leftHandPointing, pointerEnabled;
     private CollisionChecker collisionChecker;
+    private float toNextDamageSound, toNextCollideSound;
 
     void Awake()
     {
-        gestureManager = new GestureManager(sampleTime, accuracyPerSample, lengthAccuracyFactor, samplesPerGesture, clearJSON, numCalibrations);
+        gestureManager = new GestureManager(sampleTime, accuracyPerSample, samplesPerGesture, clearJSON, numCalibrations);
     }
 
     void Start()
@@ -60,6 +61,12 @@ public class Player : MonoBehaviour
         audioSource.clip = damageSound;
 
         pointerEnabled = true;
+
+        GesturePickTest.Test1();
+        GesturePickTest.Test2();
+
+        SampleConvertTest.Test1();
+        SampleConvertTest.Test2();
     }
 
     void Update()
@@ -108,6 +115,13 @@ public class Player : MonoBehaviour
         }
 
         gestureManager.Update(this, Time.deltaTime, true);
+
+        //Deal with sound cooldowns
+        if (toNextDamageSound > 0)
+            toNextDamageSound -= Time.deltaTime;
+
+        if (toNextCollideSound > 0)
+            toNextCollideSound -= Time.deltaTime;
 
         //Deal with player movement
         CalcMovement();
@@ -284,8 +298,14 @@ public class Player : MonoBehaviour
 
     public void Damage(float damage)
     {
-        //maybe add damaged sound effect
-        audioSource.Play();
+        //play damage sound effect if enough time has passed since the last one
+        if (toNextDamageSound <= 0)
+        {
+            audioSource.clip = damageSound;
+
+            audioSource.Play();
+            toNextDamageSound = damageSoundCD;
+        }
 
         //If damage killed the player
         if (!healthComp.TakeDamage(damage))
@@ -308,6 +328,9 @@ public class Player : MonoBehaviour
 
         leftHand.ResetGems();
         rightHand.ResetGems();
+
+        toNextDamageSound = 0;
+        toNextCollideSound = 0;
     }
 
     public void CreateSample(Vector3 pos)
@@ -371,7 +394,20 @@ public class Player : MonoBehaviour
 
         velocity = moveDir * moveSpeed * runMult;
 
-        if(!collisionChecker.IsColliding(transform.position + velocity * Time.deltaTime, true))
+        if (!collisionChecker.IsColliding(transform.position + velocity * Time.deltaTime, true))
             transform.position += velocity * Time.deltaTime;
+        else
+            Collide();
+    }
+
+    private void Collide()
+    {
+        if (toNextCollideSound <= 0)
+        {
+            audioSource.clip = collideSound;
+
+            audioSource.Play();
+            toNextCollideSound = collideSoundCD;
+        }
     }
 }

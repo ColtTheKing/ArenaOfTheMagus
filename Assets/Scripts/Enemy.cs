@@ -7,7 +7,7 @@ public class Enemy : MonoBehaviour
     public int startingHP;
     public float attackDamage, baseSpeed, attackCooldown, attackRange, resistForce;
     //AI Movement Variables
-    public float pursueDuration, pursueAheadDist, pursueRange, avoidDist, separationRadius, pursueCoefficient, avoidCoefficient, separationCoefficient, cohesionCoefficient, wanderCoefficient;
+    public float pursueDuration, pursueAheadDist, pursueRange, avoidDist, separationRadius, pursueCoefficient, avoidCoefficient, separationCoefficient, cohesionCoefficient, wanderCoefficient, turnSpeed;
     public Material baseMaterial, weakenMaterial;
     public List<AudioClip> damageSounds, idleSounds, attackSounds;
 
@@ -284,8 +284,6 @@ public class Enemy : MonoBehaviour
                 float avoidForce = (avoidRadius - fromObstacle.magnitude) / avoidRadius;
 
                 avoid += fromObstacle.normalized * avoidForce;
-
-                Weaken(1, 1);
             }
         }
 
@@ -350,6 +348,8 @@ public class Enemy : MonoBehaviour
         {
             if (!collisionChecker.IsColliding(transform.position + pushVelocity * Time.deltaTime, false))
                 transform.position += pushVelocity * Time.deltaTime;
+
+            stunTimer -= Time.deltaTime;
         }
 
         if (slowTimer > 0)
@@ -358,11 +358,6 @@ public class Enemy : MonoBehaviour
 
             if (slowTimer < 0)
                 speed = baseSpeed;
-        }
-
-        if(stunTimer > 0)
-        {
-            stunTimer -= Time.deltaTime;
         }
 
         if (pushVelocity.magnitude > 0)
@@ -378,20 +373,54 @@ public class Enemy : MonoBehaviour
 
     private void Turn(Vector3 turnDir)
     {
-        float tempRot;
+        float tempRot, currentRot, desiredRot;
 
         float h = Mathf.Sqrt(turnDir.x * turnDir.x + turnDir.z * turnDir.z);
 
+        if (h == 0)
+            return;
+        
         //Determine the rotation of this node relative to the head
-        if (h != 0)
-        {
-            if (turnDir.x >= 0)
-                tempRot = Mathf.Acos(turnDir.z / h);
-            else
-                tempRot = 2.0f * Mathf.PI - Mathf.Acos(turnDir.z / h);
+        if (turnDir.x >= 0)
+            tempRot = Mathf.Acos(turnDir.z / h);
+        else
+            tempRot = 2.0f * Mathf.PI - Mathf.Acos(turnDir.z / h);
 
-            transform.eulerAngles = new Vector3(0, tempRot, 0);
+        desiredRot = tempRot * Mathf.Rad2Deg;
+        
+        Debug.Log("desired rotation = " + desiredRot);
+        
+        currentRot = transform.eulerAngles.y;
+        
+        Debug.Log("current rotation = " + currentRot);
+
+        float diff1 = Mathf.Abs(currentRot - desiredRot);
+        float diff2 = 360 - diff1;
+        float changeInRot;
+        
+        if(diff1 < diff2)
+        {
+            //If change is less than the max turn for this frame
+            if(diff1 < turnSpeed * Time.deltaTime)
+                changeInRot = diff1;
+            else
+                changeInRot = turnSpeed * Time.deltaTime;
+            
+            if(currentRot > desiredRot)
+                changeInRot *= -1;
         }
+        else
+        {
+            if(diff2 < turnSpeed * Time.deltaTime)
+                changeInRot = diff2;
+            else
+                changeInRot = turnSpeed * Time.deltaTime;
+            
+            if(currentRot < desiredRot)
+                changeInRot *= -1;
+        }
+        
+        transform.eulerAngles += new Vector3(0, changeInRot, 0);
     }
 
     private void PlayIdleSound()

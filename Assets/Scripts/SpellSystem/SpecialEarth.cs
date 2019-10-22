@@ -21,5 +21,6 @@ public class SpecialEarth : Spell
     public override void Cast(Player player, bool left)
     {
         player.AddShield(shieldHp, player.rockMaterial);
+        GetComponent<AudioSource>().Play();
     }
 }

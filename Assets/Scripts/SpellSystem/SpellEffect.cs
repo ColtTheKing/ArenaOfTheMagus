@@ -34,6 +34,7 @@ public class SpellEffect : MonoBehaviour
             targetPos.y = transform.position.y;
 
             transform.position = targetPos;
+            transform.eulerAngles = target.transform.eulerAngles;
         }
         else if(targetSet && destroyOnDeath)
         {

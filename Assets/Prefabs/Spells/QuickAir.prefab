@@ -59,9 +59,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 829a082183c37424bbaa379e6980f90f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lifespan: 5
+  lifespan: 4
   cooldown: 0.5
-  speed: 8
+  speed: 10
   shoveForce: 2
   particleStart: 0.1
 --- !u!54 &3594000546247277355

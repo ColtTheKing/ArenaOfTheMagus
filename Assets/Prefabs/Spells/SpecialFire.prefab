@@ -65,10 +65,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29e8e18a8441dfc4c9432d984fe2b62b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lifespan: 4
+  lifespan: 3
   cooldown: 4
   distanceAhead: 3
-  dotDuration: 5
+  dotDuration: 3
   dotDamage: 1
 --- !u!1 &9029791991920281429
 GameObject:

@@ -9,14 +9,14 @@ public class GestureManager
 
     private List<Gesture> oneHandGestures, twoHandGestures, calibratedGestures;
     private Gesture currentGesture;
-    private float sampleTime, lNextSample, rNextSample, accuracyPerSample, lengthAccuracyFactor;
+    private float sampleTime, lNextSample, rNextSample, accuracyPerSample;
     private int samplesPerGesture, numCalibrations;
     private bool calibrating;
     private SpellHandler.SpellType calibrationType;
     private GestureCalibrationMenu calibrationMenu;
 
     // Start is called before the first frame update
-    public GestureManager(float sampleTime, float accuracyPerSample, float lengthAccuracyFactor, int samplesPerGesture, bool clearJSON, int numCalibrations)
+    public GestureManager(float sampleTime, float accuracyPerSample, int samplesPerGesture, bool clearJSON, int numCalibrations)
     {
         oneHandGestures = new List<Gesture>();
         twoHandGestures = new List<Gesture>();
@@ -31,9 +31,6 @@ public class GestureManager
 
         //The default number of samples to convert to when comparing gestures
         this.samplesPerGesture = samplesPerGesture;
-
-        //The amount that gesture length is considered when comparing gestures
-        this.lengthAccuracyFactor = lengthAccuracyFactor;
 
         lNextSample = -1;
         rNextSample = -1;
@@ -354,8 +351,8 @@ public class GestureManager
             
             foreach (Gesture g in twoHandGestures)
             {
-                float diff = g.AverageDifference(inputGesture, lengthAccuracyFactor, Gesture.GestureHand.LEFT)
-                    + g.AverageDifference(inputGesture, lengthAccuracyFactor, Gesture.GestureHand.RIGHT) / 2;
+                float diff = g.AverageDifference(inputGesture, Gesture.GestureHand.LEFT)
+                    + g.AverageDifference(inputGesture, Gesture.GestureHand.RIGHT) / 2;
                 
                 //Debug.Log("diff = " + diff);
                 
@@ -374,7 +371,7 @@ public class GestureManager
             
             foreach (Gesture g in oneHandGestures)
             {
-                float diff = g.AverageDifference(inputGesture, lengthAccuracyFactor, hands);
+                float diff = g.AverageDifference(inputGesture, hands);
                 
                 //Debug.Log("diff = " + diff);
 

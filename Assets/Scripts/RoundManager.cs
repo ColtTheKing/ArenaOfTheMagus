@@ -1,10 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class RoundManager : MonoBehaviour
 {
+    public Text roundText;
     public Enemy enemy;
+    public BigSkeleton harold;
     public List<Vector3> enemyFlockOffsets;
     public List<Vector3> flockSpawns;
     public List<int> increaseFlockRounds;
@@ -77,6 +80,8 @@ public class RoundManager : MonoBehaviour
         inGame = true;
         player.ToggleMenuPointer(false);
         player.SetElements(leftElement, rightElement);
+
+        harold.PlayEnter();
     }
 
     public void NextRound()
@@ -89,7 +94,12 @@ public class RoundManager : MonoBehaviour
             spawnsOccupied[i] = false;
 
         if (++currentRound == increaseFlockRounds[flocksPerRound - 1])
+        {
+            harold.PlayAdvance(flocksPerRound - 1);
             flocksPerRound++;
+        }
+        
+        roundText.text = "Round " + currentRound;
     }
 
     public void EndRounds()
@@ -102,14 +112,20 @@ public class RoundManager : MonoBehaviour
             spawnsOccupied[i] = false;
 
         flocks.Clear();
+        
+        roundText.text = "Round 1";
 
         currentRound = 1;
         spawnTimer = 0;
+        flocksKilledThisRound = 0;
+        flocksPerRound = 1;
 
         inGame = false;
         player.ToggleMenuPointer(true);
         player.transform.position = new Vector3(0, 0, 0);
         player.ResetStuff();
+
+        harold.PlayLose();
 
         gameManager.EndGame();
     }

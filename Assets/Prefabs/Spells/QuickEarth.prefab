@@ -152,10 +152,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 645e41c93bcaedf408c984db4f495460, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lifespan: 5
+  lifespan: 1
   cooldown: 0.5
-  horizontalSpeed: 3
-  verticalSpeed: 3
+  horizontalSpeed: 4
+  verticalSpeed: 4
   shoveForce: 2
   maxDist: 0.8
   damage: 5

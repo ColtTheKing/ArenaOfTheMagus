@@ -73,6 +73,7 @@ public class OffensiveNature : Spell
 
         SpellEffect effect = Instantiate(spellVisualization);
         effect.EffectTarget(e, rootDuration);
+        effect.transform.eulerAngles = new Vector3(0, e.transform.eulerAngles.y, 0);
 
         Destroy(gameObject);
     }

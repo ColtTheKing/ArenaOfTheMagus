@@ -148,6 +148,7 @@ SkinnedMeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -1564,6 +1565,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -1699,9 +1701,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startingHP: 10
   attackDamage: 1
-  baseSpeed: 1.5
+  baseSpeed: 1.2
   attackCooldown: 2
-  attackRange: 1
+  attackRange: 1.2
   resistForce: 1
   pursueDuration: 3
   pursueAheadDist: 1
@@ -1713,14 +1715,15 @@ MonoBehaviour:
   separationCoefficient: 1
   cohesionCoefficient: 0.1
   wanderCoefficient: 1
+  turnSpeed: 45
   baseMaterial: {fileID: 2100000, guid: 5816d86b20d0e6a4db6a00088c56b219, type: 2}
   weakenMaterial: {fileID: 2100000, guid: e48d997810ed6144eb2282c440ab7c94, type: 2}
   damageSounds:
   - {fileID: 8300000, guid: c6e1dca6c33f3af4cbf9fcfe350dfd14, type: 3}
   idleSounds:
-  - {fileID: 8300000, guid: c0180adaa4c5c1b479737115963d55ce, type: 3}
-  - {fileID: 8300000, guid: 53105a6328cf4bb4580741de6b51137a, type: 3}
-  - {fileID: 8300000, guid: ff5bc9736e719574d8adba2ee06c9eaa, type: 3}
+  - {fileID: 8300000, guid: f99ef83e41f2fc64caef1b25e7285edc, type: 3}
+  - {fileID: 8300000, guid: badd42de191b90f4b8b51dfca1b475d5, type: 3}
+  - {fileID: 8300000, guid: e81a03a981ee8ea43b2df95e69c9f2ef, type: 3}
   attackSounds:
   - {fileID: 8300000, guid: f6d0fc9e861221e45826be0932ce1cb4, type: 3}
   - {fileID: 8300000, guid: 8c910fc56a6738e4f9182ede52e0f723, type: 3}
@@ -3273,6 +3276,7 @@ SkinnedMeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -5135,6 +5139,7 @@ SkinnedMeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -6734,6 +6739,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -6815,6 +6821,7 @@ SkinnedMeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -11855,6 +11862,7 @@ ParticleSystemRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -13304,6 +13312,7 @@ SkinnedMeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -14283,6 +14292,7 @@ SkinnedMeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -15437,6 +15447,7 @@ SkinnedMeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -16709,6 +16720,7 @@ SkinnedMeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0

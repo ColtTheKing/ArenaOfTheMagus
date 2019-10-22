@@ -4827,10 +4827,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c230a5ed4b904434a9956fcc0f88b727, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lifespan: 2.5
+  lifespan: 3
   cooldown: 0.5
-  speed: 10
+  speed: 8
   dotDuration: 3
   particleStart: 0.09
-  damage: 3
+  damage: 1
   dotDamage: 1

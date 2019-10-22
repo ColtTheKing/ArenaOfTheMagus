@@ -279,8 +279,12 @@ public class Gesture
                 lastNodeConvertedPosition = convertedNodePos;
             }
 
-            //The last node will be the same
-            nodesConverted.Add(NodeAt(NumNodes(GestureHand.LEFT) - 1, GestureHand.LEFT));
+            //If we need to pass any more nodes increment the index and add on that node's offset
+            while (lastNodeIndex < NumNodes(GestureHand.LEFT) - 1)
+                lastNodePosition += NodeAt(++lastNodeIndex, GestureHand.LEFT);
+
+            //Do the last node
+            nodesConverted.Add(lastNodePosition - lastNodeConvertedPosition);
 
             //Actually set the nodes to the new converted ones
             leftNodes = nodesConverted;
@@ -362,7 +366,7 @@ public class Gesture
         return spell;
     }
 
-    public float AverageDifference(Gesture toCompare, float lengthFactor, GestureHand hand)
+    public float AverageDifference(Gesture toCompare, GestureHand hand)
     {
         float diff = 0;
         int numNodes = NumNodes(hand);
@@ -371,12 +375,10 @@ public class Gesture
         {
             Vector3 node1 = NodeAt(i, hand);
             Vector3 node2 = toCompare.NodeAt(i, hand);
-            
+
             float angleDifference = 1.0f - Vector3.Dot(node1.normalized, node2.normalized);
 
-            float lengthDifference = Mathf.Abs(node1.magnitude - node2.magnitude) / node1.magnitude;
-
-            diff += angleDifference + lengthDifference * lengthFactor;
+            diff += angleDifference;
         }
 
         return diff / (numNodes-1);

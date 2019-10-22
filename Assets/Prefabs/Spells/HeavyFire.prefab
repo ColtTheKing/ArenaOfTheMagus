@@ -4831,5 +4831,5 @@ MonoBehaviour:
   cooldown: 2
   speed: 5
   dotDuration: 3
-  damage: 5
+  damage: 2
   dotDamage: 1
